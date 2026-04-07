@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback, useState } from "react"
+import { useRef, useCallback, useMemo, useState } from "react"
 import useSWR from "swr"
 import { FoxToken } from "./fox-token"
 import { MissionNode } from "./mission-node"
@@ -527,6 +527,31 @@ export function WorldMap() {
     Q 93.5 45.4, 96.2 42.5
   `
 
+  const teamsByNodeId = useMemo(() => {
+    if (!teams) {
+      return {} as Record<string, TeamToken[]>
+    }
+
+    return teams.reduce<Record<string, TeamToken[]>>((acc, team) => {
+      if (!acc[team.currentNodeId]) {
+        acc[team.currentNodeId] = []
+      }
+      acc[team.currentNodeId].push(team)
+      return acc
+    }, {})
+  }, [teams])
+
+  const visibleTeams = useMemo(() => {
+    if (!teams) {
+      return [] as TeamToken[]
+    }
+
+    return teams.filter((team) => {
+      const teamsAtNode = teamsByNodeId[team.currentNodeId] ?? []
+      return teamsAtNode.length <= 3
+    })
+  }, [teams, teamsByNodeId])
+
   if (!nodes || !teams) {
     return (
       <div className="relative w-screen h-screen overflow-hidden bg-background flex items-center justify-center">
@@ -588,17 +613,29 @@ export function WorldMap() {
           onClick={() => setActiveNode(node)}
           onDrop={(teamId) => handleTeamDrop(teamId, node.id)}
           isDropTarget={draggingTeam !== null}
+          teamsAtNode={(teamsByNodeId[node.id] ?? []).slice().sort((a, b) => a.id.localeCompare(b.id))}
+          onTeamNameChange={handleTeamNameChange}
+          onTeamRemove={removeTeam}
+          onTeamDragStart={(teamId) => setDraggingTeam(teamId)}
+          onTeamDragEnd={handleDragEnd}
         />
       ))}
 
-      {teams?.map((team) => {
+      {visibleTeams.map((team) => {
         const node = nodes?.find((n) => n.id === team.currentNodeId)
         if (!node) return null
+
+        const teamsAtNode = (teamsByNodeId[team.currentNodeId] ?? [])
+          .sort((a, b) => a.id.localeCompare(b.id))
+        const stackIndex = teamsAtNode.findIndex((t) => t.id === team.id)
+
         return (
           <FoxToken
             key={team.id}
             team={team}
             position={{ x: node.x, y: node.y }}
+            stackIndex={stackIndex}
+            stackSize={teamsAtNode.length}
             onDragStart={() => setDraggingTeam(team.id)}
             onDragEnd={handleDragEnd}
             onNameChange={(name) => handleTeamNameChange(team.id, name)}

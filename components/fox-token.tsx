@@ -6,13 +6,24 @@ import type { TeamToken } from "./world-map"
 interface FoxTokenProps {
   team: TeamToken
   position: { x: number; y: number }
+  stackIndex?: number
+  stackSize?: number
   onDragStart: () => void
   onDragEnd: () => void
   onNameChange: (name: string) => void
   onRemove: () => void
 }
 
-export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange, onRemove }: FoxTokenProps) {
+export function FoxToken({
+  team,
+  position,
+  stackIndex = 0,
+  stackSize = 1,
+  onDragStart,
+  onDragEnd,
+  onNameChange,
+  onRemove,
+}: FoxTokenProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(team.name)
 
@@ -43,6 +54,11 @@ export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange,
   const offsetSeed = Number.parseInt(team.id.split("-")[1] ?? "0", 10)
   const tokenOffset = Number.isFinite(offsetSeed) ? ((offsetSeed % 9) - 4) * 0.8 : 0
 
+  // Spread teams sharing the same node in a small orbit around it to keep node center clickable.
+  const angle = stackSize > 1 ? (Math.PI * 2 * stackIndex) / stackSize - Math.PI / 2 : 0
+  const orbitX = stackSize > 1 ? Math.cos(angle) * 3.2 : 0
+  const orbitY = stackSize > 1 ? Math.sin(angle) * 2.6 : 0
+
   return (
     <div
       draggable
@@ -50,8 +66,8 @@ export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange,
       onDragEnd={handleDragEnd}
       className="absolute z-20 cursor-grab active:cursor-grabbing group"
       style={{
-        left: `calc(${position.x + tokenOffset}% - 35px)`,
-        top: `calc(${position.y}% - 80px)`,
+        left: `calc(${position.x + tokenOffset + orbitX}% - 35px)`,
+        top: `calc(${position.y + orbitY}% - 118px)`,
       }}
     >
       {/* Token container */}
@@ -67,28 +83,30 @@ export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange,
           <FoxFace />
         </div>
 
-        {/* Team name label */}
-        {isEditing ? (
-          <input
-            type="text"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            onBlur={handleNameSubmit}
-            onKeyDown={handleKeyDown}
-            className="mt-1 px-2 py-1 text-sm font-semibold rounded-full bg-white text-gray-800 border-2 text-center w-24 outline-none"
-            style={{ borderColor: team.color }}
-            autoFocus
-          />
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="mt-1 px-3 py-1 text-sm font-semibold rounded-full bg-white text-gray-800 border-2 hover:bg-gray-100 transition-colors max-w-[100px] truncate"
-            style={{ borderColor: team.color }}
-            title="Click to edit team name"
-          >
-            {team.name}
-          </button>
-        )}
+        {/* Team name label (placed above avatar so it never covers the node) */}
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onBlur={handleNameSubmit}
+              onKeyDown={handleKeyDown}
+              className="px-2 py-1 text-sm font-semibold rounded-full bg-white text-gray-800 border-2 text-center w-24 outline-none"
+              style={{ borderColor: team.color }}
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1 text-sm font-semibold rounded-full bg-white text-gray-800 border-2 hover:bg-gray-100 transition-colors max-w-[100px] truncate"
+              style={{ borderColor: team.color }}
+              title="Click to edit team name"
+            >
+              {team.name}
+            </button>
+          )}
+        </div>
 
         {/* Remove button */}
         <button
