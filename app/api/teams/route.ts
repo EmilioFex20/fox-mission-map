@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { redis, KEYS } from "@/lib/redis"
+import { redis, KEYS, isRedisAvailable } from "@/lib/redis"
 
 export interface TeamToken {
   id: string
@@ -24,20 +24,30 @@ const DEFAULT_TEAMS: TeamToken[] = [
   { id: "team-3", name: "Team Gamma", color: TOKEN_COLORS[2], currentNodeId: "start" },
 ]
 
+// In-memory store for when Redis is not available
+let memoryStore: TeamToken[] = DEFAULT_TEAMS
+
 export async function GET() {
   try {
-    const teams = await redis.get<TeamToken[]>(KEYS.TEAMS)
-    
-    if (!teams || teams.length === 0) {
-      // Initialize with default teams if none exist
-      await redis.set(KEYS.TEAMS, DEFAULT_TEAMS)
-      return NextResponse.json(DEFAULT_TEAMS)
+    // If Redis is available, use it
+    if (isRedisAvailable && redis) {
+      const teams = await redis.get<TeamToken[]>(KEYS.TEAMS)
+      
+      if (!teams || teams.length === 0) {
+        // Initialize with default teams if none exist
+        await redis.set(KEYS.TEAMS, DEFAULT_TEAMS)
+        return NextResponse.json(DEFAULT_TEAMS)
+      }
+      
+      return NextResponse.json(teams)
     }
-    
-    return NextResponse.json(teams)
+
+    // Otherwise use in-memory store
+    return NextResponse.json(memoryStore)
   } catch (error) {
     console.error("Error fetching teams:", error)
-    return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 })
+    // Fall back to default teams on error instead of returning 500
+    return NextResponse.json(DEFAULT_TEAMS)
   }
 }
 
@@ -46,7 +56,14 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { action, team, teamId, updates } = body
 
-    const teams = (await redis.get<TeamToken[]>(KEYS.TEAMS)) || []
+    let teams: TeamToken[]
+    
+    // Get current teams from Redis or memory
+    if (isRedisAvailable && redis) {
+      teams = (await redis.get<TeamToken[]>(KEYS.TEAMS)) || DEFAULT_TEAMS
+    } else {
+      teams = memoryStore
+    }
 
     let updatedTeams: TeamToken[]
 
@@ -70,7 +87,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Invalid action" }, { status: 400 })
     }
 
-    await redis.set(KEYS.TEAMS, updatedTeams)
+    // Save to Redis or memory
+    if (isRedisAvailable && redis) {
+      await redis.set(KEYS.TEAMS, updatedTeams)
+    } else {
+      memoryStore = updatedTeams
+    }
+    
     return NextResponse.json(updatedTeams)
   } catch (error) {
     console.error("Error updating teams:", error)

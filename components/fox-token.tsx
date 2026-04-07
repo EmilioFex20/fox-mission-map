@@ -7,17 +7,22 @@ interface FoxTokenProps {
   team: TeamToken
   position: { x: number; y: number }
   onDragStart: () => void
+  onDragEnd: () => void
   onNameChange: (name: string) => void
   onRemove: () => void
 }
 
-export function FoxToken({ team, position, onDragStart, onNameChange, onRemove }: FoxTokenProps) {
+export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange, onRemove }: FoxTokenProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(team.name)
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("teamId", team.id)
     onDragStart()
+  }
+
+  const handleDragEnd = () => {
+    onDragEnd()
   }
 
   const handleNameSubmit = () => {
@@ -41,6 +46,7 @@ export function FoxToken({ team, position, onDragStart, onNameChange, onRemove }
     <div
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className="absolute z-20 cursor-grab active:cursor-grabbing group"
       style={{
         left: `calc(${position.x + tokenOffset}% - 35px)`,

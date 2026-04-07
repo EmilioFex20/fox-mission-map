@@ -15,7 +15,7 @@ export interface MissionNodeData {
   zone: "forest" | "city" | "vault" | "ai"
   label: string
   state: NodeState
-}
+} 
 
 export interface TeamToken {
   id: string
@@ -48,6 +48,7 @@ export function WorldMap() {
     revalidateOnReconnect: false,
   })
 
+  // Resume polling after drag ends
   const handleDragEnd = useCallback(() => {
     setDraggingTeam(null)
   }, [])
@@ -63,19 +64,18 @@ export function WorldMap() {
       const nextState: NodeState =
         node.state === "locked" ? "unlocked" : node.state === "unlocked" ? "completed" : "locked"
 
-      try {
-        const res = await fetch("/api/nodes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", nodeId, state: nextState }),
-        })
-        
-        if (res.ok) {
-          await mutateNodes()
-        }
-      } catch (error) {
-        console.error("Failed to update node:", error)
-      }
+      // Optimistic update
+      const updatedNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state: nextState } : n))
+      mutateNodes(updatedNodes, false)
+
+      // Persist to Redis
+      await fetch("/api/nodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", nodeId, state: nextState }),
+      })
+
+      await mutateNodes()
     },
     [nodes, mutateNodes]
   )
@@ -84,21 +84,18 @@ export function WorldMap() {
     async (teamId: string, nodeId: string) => {
       if (!teams) return
 
+      // Optimistic update
       const updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, currentNodeId: nodeId } : team))
-      
-      try {
-        const res = await fetch("/api/teams", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", teamId, updates: { currentNodeId: nodeId } }),
-        })
-        
-        if (res.ok) {
-          await mutateTeams()
-        }
-      } catch (error) {
-        console.error("Failed to update team:", error)
-      }
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", teamId, updates: { currentNodeId: nodeId } }),
+      })
+
+      await mutateTeams()
     },
     [teams, mutateTeams]
   )
@@ -107,19 +104,18 @@ export function WorldMap() {
     async (teamId: string, newName: string) => {
       if (!teams) return
 
-      try {
-        const res = await fetch("/api/teams", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", teamId, updates: { name: newName } }),
-        })
-        
-        if (res.ok) {
-          await mutateTeams()
-        }
-      } catch (error) {
-        console.error("Failed to rename team:", error)
-      }
+      // Optimistic update
+      const updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, name: newName } : team))
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", teamId, updates: { name: newName } }),
+      })
+
+      await mutateTeams()
     },
     [teams, mutateTeams]
   )
@@ -136,58 +132,58 @@ export function WorldMap() {
       currentNodeId: "start",
     }
 
-    try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", team: newTeam }),
-      })
-      
-      if (res.ok) {
-        await mutateTeams()
-      }
-    } catch (error) {
-      console.error("Failed to add team:", error)
-    }
+    // Optimistic update
+    mutateTeams([...teams, newTeam], false)
+
+    // Persist to Redis
+    await fetch("/api/teams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "add", team: newTeam }),
+    })
+
+    await mutateTeams()
   }, [teams, mutateTeams])
 
   const removeTeam = useCallback(
     async (teamId: string) => {
       if (!teams) return
 
-      try {
-        const res = await fetch("/api/teams", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "remove", teamId }),
-        })
-        
-        if (res.ok) {
-          await mutateTeams()
-        }
-      } catch (error) {
-        console.error("Failed to remove team:", error)
-      }
+      // Optimistic update
+      const updatedTeams = teams.filter((team) => team.id !== teamId)
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove", teamId }),
+      })
+
+      await mutateTeams()
     },
     [teams, mutateTeams]
   )
 
   const resetGame = useCallback(async () => {
+    // Reset nodes to default
     await fetch("/api/nodes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "reset" }),
     })
-    mutateNodes()
+    await mutateNodes()
 
+    // Clear all teams
     await fetch("/api/teams", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "clear" }),
     })
-    mutateTeams()
+    await mutateTeams()
   }, [mutateNodes, mutateTeams])
 
+  // Generate path points for the winding road (scaled to 0-100% coordinate space)
   const pathD = `
     M 4.2 53.7
     Q 7.3 51, 10.4 48.1
@@ -204,6 +200,7 @@ export function WorldMap() {
     Q 85.4 45.4, 89.6 48.1
   `
 
+  // Loading state
   if (!nodes || !teams) {
     return (
       <div className="relative w-screen h-screen overflow-hidden bg-background flex items-center justify-center">
@@ -217,9 +214,12 @@ export function WorldMap() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden" ref={mapRef}>
+      {/* Background Landscape */}
       <MapBackground />
 
+      {/* Path SVG */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {/* Glowing path background */}
         <path
           d={pathD}
           fill="none"
@@ -229,6 +229,7 @@ export function WorldMap() {
           strokeLinejoin="round"
           filter="url(#glow)"
         />
+        {/* Main path */}
         <path
           d={pathD}
           fill="none"
@@ -238,6 +239,7 @@ export function WorldMap() {
           strokeLinejoin="round"
           strokeDasharray="0 3"
         />
+        {/* Path dots */}
         <path
           d={pathD}
           fill="none"
@@ -247,6 +249,7 @@ export function WorldMap() {
           strokeLinejoin="round"
           strokeDasharray="0.15 2.5"
         />
+        {/* Glow filter */}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="0.5" result="blur" />
@@ -258,6 +261,7 @@ export function WorldMap() {
         </defs>
       </svg>
 
+      {/* Mission Nodes */}
       {nodes?.map((node) => (
         <MissionNode
           key={node.id}
@@ -268,6 +272,7 @@ export function WorldMap() {
         />
       ))}
 
+      {/* Team Tokens at their current positions */}
       {teams?.map((team) => {
         const node = nodes?.find((n) => n.id === team.currentNodeId)
         if (!node) return null
@@ -284,6 +289,7 @@ export function WorldMap() {
         )
       })}
 
+      {/* Title Banner */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center z-20">
         <h1 className="text-5xl font-bold text-foreground drop-shadow-lg font-sans tracking-wide">
           HackHexa: Fox Mission
@@ -293,6 +299,7 @@ export function WorldMap() {
         </p>
       </div>
 
+      {/* Zone Labels */}
       <div className="absolute top-[12%] left-[10%] text-center z-10">
         <span className="px-4 py-2 bg-forest-green/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Sensor Forest
@@ -314,6 +321,7 @@ export function WorldMap() {
         </span>
       </div>
 
+      {/* Add Team Button */}
       <button
         onClick={addNewTeam}
         className="absolute bottom-6 right-6 px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold text-lg shadow-lg hover:scale-105 transition-transform z-20"
@@ -321,6 +329,7 @@ export function WorldMap() {
         + Add Team
       </button>
 
+      {/* Reset Game Button */}
       <button
         onClick={resetGame}
         className="absolute bottom-6 right-48 px-4 py-3 bg-destructive text-destructive-foreground rounded-full font-semibold text-sm shadow-lg hover:scale-105 transition-transform z-20"
@@ -328,6 +337,7 @@ export function WorldMap() {
         Reset Game
       </button>
 
+      {/* Legend */}
       <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl z-20">
         <h3 className="font-semibold text-card-foreground mb-3">Node States</h3>
         <div className="flex gap-4">
@@ -350,6 +360,7 @@ export function WorldMap() {
         </div>
       </div>
 
+      {/* Sync Status Indicator */}
       <div className="absolute top-6 right-6 px-3 py-1 bg-card/80 backdrop-blur-sm rounded-full text-sm text-card-foreground z-20">
         <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
         Synced

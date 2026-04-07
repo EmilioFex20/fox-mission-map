@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { redis, KEYS } from "@/lib/redis"
+import { redis, KEYS, isRedisAvailable } from "@/lib/redis"
 
 export type NodeState = "locked" | "unlocked" | "completed"
 
@@ -33,20 +33,30 @@ const DEFAULT_NODES: MissionNodeData[] = [
   { id: "ai-final", x: 89.6, y: 48.1, zone: "ai", label: "AI Core", state: "locked" },
 ]
 
+// In-memory store for when Redis is not available
+let memoryStore: MissionNodeData[] = DEFAULT_NODES
+
 export async function GET() {
   try {
-    const nodes = await redis.get<MissionNodeData[]>(KEYS.NODES)
-    
-    if (!nodes || nodes.length === 0) {
-      // Initialize with default nodes if none exist
-      await redis.set(KEYS.NODES, DEFAULT_NODES)
-      return NextResponse.json(DEFAULT_NODES)
+    // If Redis is available, use it
+    if (isRedisAvailable && redis) {
+      const nodes = await redis.get<MissionNodeData[]>(KEYS.NODES)
+      
+      if (!nodes || nodes.length === 0) {
+        // Initialize with default nodes if none exist
+        await redis.set(KEYS.NODES, DEFAULT_NODES)
+        return NextResponse.json(DEFAULT_NODES)
+      }
+      
+      return NextResponse.json(nodes)
     }
-    
-    return NextResponse.json(nodes)
+
+    // Otherwise use in-memory store
+    return NextResponse.json(memoryStore)
   } catch (error) {
     console.error("Error fetching nodes:", error)
-    return NextResponse.json({ error: "Failed to fetch nodes" }, { status: 500 })
+    // Fall back to default nodes on error instead of returning 500
+    return NextResponse.json(DEFAULT_NODES)
   }
 }
 
@@ -56,25 +66,47 @@ export async function POST(request: Request) {
     const { action, nodeId, state, nodes: newNodes } = body
 
     if (action === "set") {
-      await redis.set(KEYS.NODES, newNodes)
+      if (isRedisAvailable && redis) {
+        await redis.set(KEYS.NODES, newNodes)
+      } else {
+        memoryStore = newNodes
+      }
       return NextResponse.json(newNodes)
     }
 
     if (action === "update" && nodeId) {
-      const nodes = (await redis.get<MissionNodeData[]>(KEYS.NODES)) || DEFAULT_NODES
+      let nodes: MissionNodeData[]
+      
+      if (isRedisAvailable && redis) {
+        nodes = (await redis.get<MissionNodeData[]>(KEYS.NODES)) || DEFAULT_NODES
+      } else {
+        nodes = memoryStore
+      }
+      
       const updatedNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state } : n))
-      await redis.set(KEYS.NODES, updatedNodes)
+      
+      if (isRedisAvailable && redis) {
+        await redis.set(KEYS.NODES, updatedNodes)
+      } else {
+        memoryStore = updatedNodes
+      }
+      
       return NextResponse.json(updatedNodes)
     }
 
     if (action === "reset") {
-      await redis.set(KEYS.NODES, DEFAULT_NODES)
+      if (isRedisAvailable && redis) {
+        await redis.set(KEYS.NODES, DEFAULT_NODES)
+      } else {
+        memoryStore = DEFAULT_NODES
+      }
       return NextResponse.json(DEFAULT_NODES)
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 })
   } catch (error) {
     console.error("Error updating nodes:", error)
-    return NextResponse.json({ error: "Failed to update nodes" }, { status: 500 })
+    // Return default data on error for graceful degradation
+    return NextResponse.json(DEFAULT_NODES)
   }
 }
