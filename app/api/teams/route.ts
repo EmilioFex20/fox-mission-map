@@ -18,11 +18,7 @@ const TOKEN_COLORS = [
   "#06B6D4", // cyan
 ]
 
-const DEFAULT_TEAMS: TeamToken[] = [
-  { id: "team-1", name: "Team Alpha", color: TOKEN_COLORS[0], currentNodeId: "start" },
-  { id: "team-2", name: "Team Beta", color: TOKEN_COLORS[1], currentNodeId: "start" },
-  { id: "team-3", name: "Team Gamma", color: TOKEN_COLORS[2], currentNodeId: "start" },
-]
+const DEFAULT_TEAMS: TeamToken[] = []
 
 // In-memory store for when Redis is not available
 let memoryStore: TeamToken[] = [...DEFAULT_TEAMS]
@@ -34,7 +30,7 @@ export async function GET() {
       const teams = await redis.get<TeamToken[]>(KEYS.TEAMS)
       
       if (!teams || teams.length === 0) {
-        // Initialize with default teams if none exist
+        // Initialize empty team list if none exist
         await redis.set(KEYS.TEAMS, DEFAULT_TEAMS)
         return NextResponse.json(DEFAULT_TEAMS)
       }
@@ -81,7 +77,7 @@ export async function POST(request: Request) {
         updatedTeams = body.teams
         break
       case "clear":
-        updatedTeams = [...DEFAULT_TEAMS]
+        updatedTeams = []
         break
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 })
