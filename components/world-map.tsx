@@ -45,7 +45,10 @@ type MissionCard = {
   problem: string
   challenge: string
   deliverable: string
+  resource_link?: { label: string; url: string }
   bonus?: string
+  steps?: string[]
+  repository_structure?: Record<string, string>
   data?: unknown
   example?: string
   map?: string[]
@@ -56,7 +59,44 @@ type MissionCard = {
   test_cases?: string[]
 }
 
+type MissionTheme = {
+  dialogClass: string
+  dialogTitleClass: string
+  dialogDescriptionClass: string
+  zonePillClass: string
+  cardClass: string
+  cardHeaderClass: string
+  dataBoxClass: string
+}
+
 const MISSION_CARDS: Record<string, MissionCard> = {
+  start: {
+    id: "start",
+    zone: "Start",
+    title: "Start – Setup GitHub",
+    problem: "Antes de comenzar la aventura, cada equipo necesita preparar su base de operaciones usando GitHub.",
+    challenge: "Configurar un repositorio donde guardaran todas las soluciones de las misiones.",
+    steps: [
+      "Crear una cuenta en GitHub si aun no tienen una",
+      "Un miembro del equipo crea un repositorio nuevo llamado hackhexa-team-[nombre-del-equipo]",
+      "Invitar a las demas integrantes del equipo como colaboradoras",
+      "Crear un archivo README.md con el nombre del equipo",
+      "Hacer el primer commit al repositorio",
+    ],
+    repository_structure: {
+      "README.md": "Descripcion del equipo y del proyecto",
+      "sensor-forest": "Retos de sensores",
+      "traffic-city": "Retos de rutas",
+      "code-vault": "Retos de codigo",
+      "ai-lab": "Retos de machine learning",
+    },
+    deliverable: "Compartir el enlace del repositorio con los organizadores.",
+    resource_link: {
+      label: "Video resource",
+      url: "https://www.youtube.com",
+    },
+    bonus: "Agregar una pequena descripcion del equipo y sus integrantes en el README.",
+  },
   "sensor-1": {
     id: "sensor-1",
     zone: "Sensor Forest",
@@ -200,7 +240,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
 }
 
 const NODE_TO_MISSION_ID: Record<string, string> = {
-  start: "sensor-1",
+  start: "start",
   "forest-1": "sensor-1",
   "forest-2": "sensor-2",
   "forest-3": "sensor-3",
@@ -213,6 +253,64 @@ const NODE_TO_MISSION_ID: Record<string, string> = {
   "ai-1": "ai-1",
   "ai-2": "ai-2",
   "ai-final": "ai-core",
+}
+
+const DEFAULT_MISSION_THEME: MissionTheme = {
+  dialogClass: "border-slate-400 bg-slate-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+  dialogTitleClass: "text-slate-900",
+  dialogDescriptionClass: "text-slate-700",
+  zonePillClass: "bg-slate-100 text-slate-800",
+  cardClass: "border-slate-300 bg-white text-slate-900 gap-0 py-0 overflow-hidden",
+  cardHeaderClass: "bg-slate-200 rounded-t-xl",
+  dataBoxClass: "bg-white border border-slate-200 text-slate-800",
+}
+
+const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
+  "Sensor Forest": {
+    dialogClass: "border-green-500 bg-green-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-green-900",
+    dialogDescriptionClass: "text-green-800",
+    zonePillClass: "bg-green-100 text-green-800",
+    cardClass: "border-green-300 bg-green-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-green-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-green-200 text-slate-800",
+  },
+  "Traffic City": {
+    dialogClass: "border-blue-500 bg-blue-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-blue-900",
+    dialogDescriptionClass: "text-blue-800",
+    zonePillClass: "bg-blue-100 text-blue-800",
+    cardClass: "border-blue-300 bg-blue-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-blue-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-blue-200 text-slate-800",
+  },
+  "Code Vault": {
+    dialogClass: "border-purple-500 bg-purple-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-purple-900",
+    dialogDescriptionClass: "text-purple-800",
+    zonePillClass: "bg-purple-100 text-purple-800",
+    cardClass: "border-purple-300 bg-purple-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-purple-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-purple-200 text-slate-800",
+  },
+  "AI Lab": {
+    dialogClass: "border-cyan-500 bg-cyan-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-cyan-900",
+    dialogDescriptionClass: "text-cyan-800",
+    zonePillClass: "bg-cyan-100 text-cyan-800",
+    cardClass: "border-cyan-300 bg-cyan-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-cyan-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-cyan-200 text-slate-800",
+  },
+  "AI Core": {
+    dialogClass: "border-cyan-500 bg-cyan-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-cyan-900",
+    dialogDescriptionClass: "text-cyan-800",
+    zonePillClass: "bg-cyan-100 text-cyan-800",
+    cardClass: "border-cyan-300 bg-cyan-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-cyan-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-cyan-200 text-slate-800",
+  },
 }
 
 export function WorldMap() {
@@ -235,6 +333,7 @@ export function WorldMap() {
   }, [])
   const mapRef = useRef<HTMLDivElement>(null)
   const activeMission = activeNode ? MISSION_CARDS[NODE_TO_MISSION_ID[activeNode.id]] : null
+  const missionTheme = activeMission ? MISSION_THEME_BY_ZONE[activeMission.zone] ?? DEFAULT_MISSION_THEME : DEFAULT_MISSION_THEME
 
   const handleTeamDrop = useCallback(
     async (teamId: string, nodeId: string) => {
@@ -529,37 +628,39 @@ export function WorldMap() {
       </div>
 
       <Dialog open={activeNode !== null} onOpenChange={(open) => !open && setActiveNode(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className={`max-w-3xl max-h-[85vh] overflow-y-auto ${missionTheme.dialogClass}`}>
           <DialogHeader>
-            <DialogTitle>{activeMission?.title ?? activeNode?.label ?? "Challenge"}</DialogTitle>
-            <DialogDescription>
-              {activeMission?.zone ?? activeNode?.zone ?? ""}
+            <DialogTitle className={missionTheme.dialogTitleClass}>{activeMission?.title ?? activeNode?.label ?? "Challenge"}</DialogTitle>
+            <DialogDescription className={missionTheme.dialogDescriptionClass}>
+              <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${missionTheme.zonePillClass}`}>
+                {activeMission?.zone ?? activeNode?.zone ?? ""}
+              </span>
             </DialogDescription>
           </DialogHeader>
 
           {activeNode && activeMission && (
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
+              <Card className={missionTheme.cardClass}>
+                <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Problema</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm">{activeMission.problem}</CardContent>
+                <CardContent className="text-sm py-6">{activeMission.problem}</CardContent>
               </Card>
 
               {(Boolean(activeMission.data) || Boolean(activeMission.dataset) || Boolean(activeMission.map) || Boolean(activeMission.test_cases)) && (
-                <Card>
-                  <CardHeader>
+                <Card className={missionTheme.cardClass}>
+                  <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Datos</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
+                  <CardContent className="space-y-3 text-sm py-6">
                     {Boolean(activeMission.data) && (
-                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{JSON.stringify(activeMission.data, null, 2)}</pre>
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(activeMission.data, null, 2)}</pre>
                     )}
                     {Boolean(activeMission.dataset) && (
-                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{JSON.stringify(activeMission.dataset, null, 2)}</pre>
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(activeMission.dataset, null, 2)}</pre>
                     )}
                     {activeMission.map && (
-                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{activeMission.map.join("\n")}</pre>
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{activeMission.map.join("\n")}</pre>
                     )}
                     {activeMission.test_cases && <p>Casos de prueba: {activeMission.test_cases.join(", ")}</p>}
                     {activeMission.blocked && <p>Zonas bloqueadas: {activeMission.blocked.join(", ")}</p>}
@@ -570,26 +671,70 @@ export function WorldMap() {
                 </Card>
               )}
 
-              <Card>
-                <CardHeader>
+              {(Boolean(activeMission.steps) || Boolean(activeMission.repository_structure)) && (
+                <Card className={missionTheme.cardClass}>
+                  <CardHeader className={missionTheme.cardHeaderClass}>
+                    <CardTitle>Instrucciones</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm py-6">
+                    {activeMission.steps && (
+                      <ol className="list-decimal pl-5 space-y-1">
+                        {activeMission.steps.map((step) => (
+                          <li key={step}>{step}</li>
+                        ))}
+                      </ol>
+                    )}
+                    {activeMission.repository_structure && (
+                      <div>
+                        <p className="font-semibold mb-2">Estructura sugerida del repositorio</p>
+                        <div className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>
+                          {Object.entries(activeMission.repository_structure).map(([name, description]) => (
+                            <p key={name}>
+                              <span className="font-semibold">{name}</span>: {description}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className={missionTheme.cardClass}>
+                <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Reto</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm">{activeMission.challenge}</CardContent>
+                <CardContent className="text-sm py-6">{activeMission.challenge}</CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
+              <Card className={missionTheme.cardClass}>
+                <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Entregable</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm">{activeMission.deliverable}</CardContent>
+                <CardContent className="text-sm py-6 space-y-2">
+                  <p>{activeMission.deliverable}</p>
+                  {activeMission.resource_link && (
+                    <p>
+                      Recurso: {" "}
+                      <a
+                        href={activeMission.resource_link.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline font-semibold"
+                      >
+                        {activeMission.resource_link.label}
+                      </a>
+                    </p>
+                  )}
+                </CardContent>
               </Card>
 
               {activeMission.bonus && (
-                <Card>
-                  <CardHeader>
+                <Card className={missionTheme.cardClass}>
+                  <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Bonus</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-sm">{activeMission.bonus}</CardContent>
+                  <CardContent className="text-sm py-6">{activeMission.bonus}</CardContent>
                 </Card>
               )}
             </div>
