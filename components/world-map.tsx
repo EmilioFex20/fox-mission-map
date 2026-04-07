@@ -607,31 +607,31 @@ export function WorldMap() {
         )
       })}
 
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center z-20">
-        <h1 className="text-5xl font-bold text-foreground drop-shadow-lg font-sans tracking-wide">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center z-30 px-6 py-2 rounded-2xl bg-black/20 backdrop-blur-[2px]">
+        <h1 className="text-5xl font-bold text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] font-sans tracking-wide">
           HackHexa: Fox Mission
         </h1>
-        <p className="text-xl text-foreground/90 mt-2 drop-shadow font-sans">
+        <p className="text-xl text-white/95 mt-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] font-sans">
           Guide your fox through the tech adventure!
         </p>
       </div>
 
-      <div className="absolute top-[12%] left-[10%] text-center z-10">
+      <div className="absolute top-[26%] left-[10%] text-center z-10">
         <span className="px-4 py-2 bg-forest-green/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Sensor Forest
         </span>
       </div>
-      <div className="absolute top-[12%] left-[35%] text-center z-10">
+      <div className="absolute top-[26%] left-[35%] text-center z-10">
         <span className="px-4 py-2 bg-city-blue/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Traffic City
         </span>
       </div>
-      <div className="absolute top-[12%] left-[58%] text-center z-10">
+      <div className="absolute top-[26%] left-[58%] text-center z-10">
         <span className="px-4 py-2 bg-vault-purple/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Code Vault
         </span>
       </div>
-      <div className="absolute top-[12%] left-[80%] text-center z-10">
+      <div className="absolute top-[26%] left-[80%] text-center z-10">
         <span className="px-4 py-2 bg-ai-cyan/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           AI Core
         </span>

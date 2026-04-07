@@ -2,18 +2,18 @@
 
 export function MapBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden z-0">
       {/* Sky gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-light via-sky-dark to-sky-dark" />
 
       {/* Clouds */}
-      <Cloud x={100} y={60} scale={1.2} />
-      <Cloud x={400} y={40} scale={0.8} />
-      <Cloud x={700} y={80} scale={1} />
-      <Cloud x={1000} y={30} scale={1.3} />
-      <Cloud x={1300} y={70} scale={0.9} />
-      <Cloud x={1600} y={50} scale={1.1} />
-      <Cloud x={1800} y={90} scale={0.7} />
+      <Cloud x={100} y={150} scale={1.2} />
+      <Cloud x={400} y={170} scale={0.8} />
+      <Cloud x={700} y={155} scale={1} />
+      <Cloud x={1000} y={165} scale={1.3} />
+      <Cloud x={1300} y={150} scale={0.9} />
+      <Cloud x={1600} y={175} scale={1.1} />
+      <Cloud x={1800} y={160} scale={0.7} />
 
       {/* Mountains in background */}
       <svg className="absolute bottom-0 w-full h-[600px]" viewBox="0 0 1920 600" preserveAspectRatio="none">
@@ -136,7 +136,7 @@ export function MapBackground() {
 function Cloud({ x, y, scale }: { x: number; y: number; scale: number }) {
   return (
     <svg
-      className="absolute animate-pulse"
+      className="absolute z-0 animate-pulse"
       style={{ left: x, top: y, transform: `scale(${scale})` }}
       width="120"
       height="60"
