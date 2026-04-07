@@ -16,25 +16,29 @@ export interface MissionNodeData {
 const DEFAULT_NODES: MissionNodeData[] = [
   // Sensor Forest Zone
   { id: "start", x: 4.2, y: 53.7, zone: "forest", label: "Start", state: "unlocked" },
-  { id: "forest-1", x: 10.4, y: 48.1, zone: "forest", label: "Sensor 1", state: "locked" },
-  { id: "forest-2", x: 16.7, y: 55.6, zone: "forest", label: "Sensor 2", state: "locked" },
-  { id: "forest-3", x: 22.9, y: 46.3, zone: "forest", label: "Sensor 3", state: "locked" },
+  { id: "forest-1", x: 10.4, y: 48.1, zone: "forest", label: "Sensor 1", state: "unlocked" },
+  { id: "forest-2", x: 16.7, y: 55.6, zone: "forest", label: "Sensor 2", state: "unlocked" },
+  { id: "forest-3", x: 22.9, y: 46.3, zone: "forest", label: "Sensor 3", state: "unlocked" },
   // Traffic City Zone
-  { id: "city-1", x: 30.2, y: 50.9, zone: "city", label: "Traffic 1", state: "locked" },
-  { id: "city-2", x: 37.5, y: 44.4, zone: "city", label: "Traffic 2", state: "locked" },
-  { id: "city-3", x: 44.8, y: 51.9, zone: "city", label: "Traffic 3", state: "locked" },
+  { id: "city-1", x: 30.2, y: 50.9, zone: "city", label: "Traffic 1", state: "unlocked" },
+  { id: "city-2", x: 37.5, y: 44.4, zone: "city", label: "Traffic 2", state: "unlocked" },
+  { id: "city-3", x: 44.8, y: 51.9, zone: "city", label: "Traffic 3", state: "unlocked" },
   // Code Vault Zone
-  { id: "vault-1", x: 52.1, y: 45.4, zone: "vault", label: "Vault 1", state: "locked" },
-  { id: "vault-2", x: 59.4, y: 52.8, zone: "vault", label: "Vault 2", state: "locked" },
-  { id: "vault-3", x: 66.7, y: 44.4, zone: "vault", label: "Vault 3", state: "locked" },
+  { id: "vault-1", x: 52.1, y: 45.4, zone: "vault", label: "Vault 1", state: "unlocked" },
+  { id: "vault-2", x: 59.4, y: 52.8, zone: "vault", label: "Vault 2", state: "unlocked" },
+  { id: "vault-3", x: 66.7, y: 44.4, zone: "vault", label: "Vault 3", state: "unlocked" },
   // AI Core Zone
-  { id: "ai-1", x: 74.0, y: 50.0, zone: "ai", label: "AI 1", state: "locked" },
-  { id: "ai-2", x: 81.3, y: 42.6, zone: "ai", label: "AI 2", state: "locked" },
-  { id: "ai-final", x: 89.6, y: 48.1, zone: "ai", label: "AI Core", state: "locked" },
+  { id: "ai-1", x: 74.0, y: 50.0, zone: "ai", label: "AI 1", state: "unlocked" },
+  { id: "ai-2", x: 81.3, y: 42.6, zone: "ai", label: "AI 2", state: "unlocked" },
+  { id: "ai-final", x: 89.6, y: 48.1, zone: "ai", label: "AI Core", state: "unlocked" },
 ]
 
 // In-memory store for when Redis is not available
-let memoryStore: MissionNodeData[] = DEFAULT_NODES
+let memoryStore: MissionNodeData[] = [...DEFAULT_NODES]
+
+function forceUnlocked(nodes: MissionNodeData[]): MissionNodeData[] {
+  return nodes.map((node) => ({ ...node, state: "unlocked" }))
+}
 
 export async function GET() {
   try {
@@ -47,11 +51,17 @@ export async function GET() {
         await redis.set(KEYS.NODES, DEFAULT_NODES)
         return NextResponse.json(DEFAULT_NODES)
       }
-      
-      return NextResponse.json(nodes)
+
+      const unlockedNodes = forceUnlocked(nodes)
+      if (JSON.stringify(unlockedNodes) !== JSON.stringify(nodes)) {
+        await redis.set(KEYS.NODES, unlockedNodes)
+      }
+
+      return NextResponse.json(unlockedNodes)
     }
 
     // Otherwise use in-memory store
+    memoryStore = forceUnlocked(memoryStore)
     return NextResponse.json(memoryStore)
   } catch (error) {
     console.error("Error fetching nodes:", error)
@@ -66,12 +76,13 @@ export async function POST(request: Request) {
     const { action, nodeId, state, nodes: newNodes } = body
 
     if (action === "set") {
+      const unlockedNodes = forceUnlocked(newNodes)
       if (isRedisAvailable && redis) {
-        await redis.set(KEYS.NODES, newNodes)
+        await redis.set(KEYS.NODES, unlockedNodes)
       } else {
-        memoryStore = newNodes
+        memoryStore = unlockedNodes
       }
-      return NextResponse.json(newNodes)
+      return NextResponse.json(unlockedNodes)
     }
 
     if (action === "update" && nodeId) {
@@ -83,7 +94,7 @@ export async function POST(request: Request) {
         nodes = memoryStore
       }
       
-      const updatedNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state } : n))
+      const updatedNodes = forceUnlocked(nodes.map((n) => (n.id === nodeId ? { ...n, state } : n)))
       
       if (isRedisAvailable && redis) {
         await redis.set(KEYS.NODES, updatedNodes)
@@ -98,7 +109,7 @@ export async function POST(request: Request) {
       if (isRedisAvailable && redis) {
         await redis.set(KEYS.NODES, DEFAULT_NODES)
       } else {
-        memoryStore = DEFAULT_NODES
+        memoryStore = [...DEFAULT_NODES]
       }
       return NextResponse.json(DEFAULT_NODES)
     }

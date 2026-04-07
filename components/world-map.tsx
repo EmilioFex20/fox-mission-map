@@ -55,41 +55,6 @@ export function WorldMap() {
   }, [])
   const mapRef = useRef<HTMLDivElement>(null)
 
-  const handleNodeClick = useCallback(
-    async (nodeId: string) => {
-      if (!nodes) return
-
-      const node = nodes.find((n) => n.id === nodeId)
-      if (!node) return
-
-      const nextState: NodeState =
-        node.state === "locked" ? "unlocked" : node.state === "unlocked" ? "completed" : "locked"
-
-      const previousNodes = nodes
-      const optimisticNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state: nextState } : n))
-      mutateNodes(optimisticNodes, false)
-
-      try {
-        const res = await fetch("/api/nodes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", nodeId, state: nextState }),
-        })
-
-        if (!res.ok) {
-          throw new Error(`Node update failed with status ${res.status}`)
-        }
-
-        const updatedNodes = (await res.json()) as MissionNodeData[]
-        await mutateNodes(updatedNodes, false)
-      } catch (error) {
-        console.error("Failed to update node:", error)
-        await mutateNodes(previousNodes, false)
-      }
-    },
-    [nodes, mutateNodes]
-  )
-
   const handleTeamDrop = useCallback(
     async (teamId: string, nodeId: string) => {
       if (!teams) return
@@ -311,7 +276,7 @@ export function WorldMap() {
         <MissionNode
           key={node.id}
           node={node}
-          onClick={() => handleNodeClick(node.id)}
+          onClick={() => {}}
           onDrop={(teamId) => handleTeamDrop(teamId, node.id)}
           isDropTarget={draggingTeam !== null}
         />
@@ -376,28 +341,6 @@ export function WorldMap() {
       >
         Reset Game
       </button>
-
-      <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl z-20">
-        <h3 className="font-semibold text-card-foreground mb-3">Node States</h3>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-muted border-2 border-muted-foreground/50 flex items-center justify-center text-xs">
-              L
-            </div>
-            <span className="text-sm text-card-foreground">Locked</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm text-card-foreground">Unlocked</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs text-white">
-              OK
-            </div>
-            <span className="text-sm text-card-foreground">Completed</span>
-          </div>
-        </div>
-      </div>
 
       <div className="absolute top-6 right-6 px-3 py-1 bg-card/80 backdrop-blur-sm rounded-full text-sm text-card-foreground z-20">
         <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
