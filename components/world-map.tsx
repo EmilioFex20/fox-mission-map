@@ -5,6 +5,8 @@ import useSWR from "swr"
 import { FoxToken } from "./fox-token"
 import { MissionNode } from "./mission-node"
 import { MapBackground } from "./map-background"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 
 export type NodeState = "locked" | "unlocked" | "completed"
 
@@ -36,8 +38,186 @@ const TOKEN_COLORS = [
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+type MissionCard = {
+  id: string
+  zone: string
+  title: string
+  problem: string
+  challenge: string
+  deliverable: string
+  bonus?: string
+  data?: unknown
+  example?: string
+  map?: string[]
+  blocked?: string[]
+  message?: string
+  hint?: string
+  dataset?: unknown
+  test_cases?: string[]
+}
+
+const MISSION_CARDS: Record<string, MissionCard> = {
+  "sensor-1": {
+    id: "sensor-1",
+    zone: "Sensor Forest",
+    title: "Sensor 1 – Identificar Variables",
+    problem: "Los sensores de la ciudad detectan muchas señales, pero el sistema no sabe cuáles son realmente importantes.",
+    data: {
+      temperatura: ["alta", "baja"],
+      movimiento: ["si", "no"],
+      luz: ["si", "no"],
+      ruido: ["alto", "bajo"],
+    },
+    challenge: "Decidan qué variables usarían para detectar actividad sospechosa en la ciudad y cuáles pueden ignorarse.",
+    deliverable:
+      "Crear un archivo en su repo llamado sensor-variables.md donde expliquen las variables elegidas, por qué son importantes y un ejemplo de uso.",
+    bonus: "Escribir una función simple en pseudocódigo que reciba estas variables.",
+  },
+  "sensor-2": {
+    id: "sensor-2",
+    zone: "Sensor Forest",
+    title: "Sensor 2 – Crear Reglas",
+    problem: "El sistema necesita decidir cuándo una zona puede ser peligrosa.",
+    challenge: "Diseñar al menos 3 reglas usando las variables de los sensores.",
+    example: "SI movimiento = si Y luz = no → actividad sospechosa",
+    deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
+    bonus: "Representar las reglas en pseudocódigo.",
+  },
+  "sensor-3": {
+    id: "sensor-3",
+    zone: "Sensor Forest",
+    title: "Sensor 3 – Probar el Sistema",
+    problem: "Ahora debemos probar si las reglas funcionan.",
+    data: [
+      { caso: "A", temperatura: "baja", movimiento: "si", luz: "no" },
+      { caso: "B", temperatura: "alta", movimiento: "no", luz: "si" },
+    ],
+    challenge: "Usar sus reglas para decidir si cada caso es seguro o sospechoso.",
+    deliverable: "Agregar los resultados y explicación en sensor-tests.md.",
+    bonus: "Crear un pequeño script que evalúe los casos automáticamente.",
+  },
+  "traffic-1": {
+    id: "traffic-1",
+    zone: "Traffic City",
+    title: "Traffic 1 – Encontrar Patrones",
+    problem: "El tráfico de la ciudad sigue ciertos patrones durante el día.",
+    data: {
+      "8:00": "alto",
+      "9:00": "alto",
+      "10:00": "medio",
+      "11:00": "bajo",
+    },
+    challenge: "Detectar el patrón y decidir cuál es el mejor momento para moverse por la ciudad.",
+    deliverable: "Crear traffic-pattern.md explicando el patrón detectado.",
+    bonus: "Graficar los datos usando cualquier herramienta.",
+  },
+  "traffic-2": {
+    id: "traffic-2",
+    zone: "Traffic City",
+    title: "Traffic 2 – Diseñar una Ruta",
+    problem: "El zorro debe moverse por la ciudad evitando zonas bloqueadas.",
+    map: ["A --- B --- C", "|     |     |", "D --- E --- F"],
+    blocked: ["B"],
+    challenge: "Encontrar una ruta de A a F sin pasar por B.",
+    deliverable: "Crear route-design.md explicando la ruta elegida.",
+    bonus: "Expresar la ruta como lista de pasos.",
+  },
+  "traffic-3": {
+    id: "traffic-3",
+    zone: "Traffic City",
+    title: "Traffic 3 – Optimizar la Ruta",
+    problem: "La ruta actual repite caminos innecesarios.",
+    example: "A → D → E → B → C → F",
+    challenge: "Encontrar una ruta más corta posible entre A y F.",
+    deliverable: "Crear route-optimization.md explicando la nueva ruta.",
+    bonus: "Comparar ambas rutas y explicar cuál es más eficiente.",
+  },
+  "vault-1": {
+    id: "vault-1",
+    zone: "Code Vault",
+    title: "Vault 1 – Descifrar el Mensaje",
+    problem: "Un mensaje secreto fue cifrado.",
+    message: "KHOOR",
+    hint: "Cada letra fue movida 3 posiciones en el alfabeto.",
+    challenge: "Descifrar el mensaje original.",
+    deliverable: "Crear decode-1.md explicando cómo descifraron el mensaje.",
+    bonus: "Escribir pseudocódigo para descifrar mensajes similares.",
+  },
+  "vault-2": {
+    id: "vault-2",
+    zone: "Code Vault",
+    title: "Vault 2 – Detectar la Regla",
+    problem: "Otro mensaje fue cifrado usando una regla desconocida.",
+    example: "HOLA → IPMB",
+    challenge: "Descubrir la regla usada para transformar el mensaje.",
+    deliverable: "Crear decode-rule.md explicando la lógica encontrada.",
+    bonus: "Probar la regla con otra palabra.",
+  },
+  "vault-3": {
+    id: "vault-3",
+    zone: "Code Vault",
+    title: "Vault 3 – Crear el Algoritmo",
+    problem: "Ahora que conocen la regla, el sistema necesita un algoritmo.",
+    challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla.",
+    deliverable: "Crear decoder-algorithm.md con los pasos o pseudocódigo.",
+    bonus: "Implementarlo en Python o JavaScript.",
+  },
+  "ai-1": {
+    id: "ai-1",
+    zone: "AI Lab",
+    title: "AI 1 – Aprender de Ejemplos",
+    problem: "El sistema necesita aprender a clasificar emociones.",
+    dataset: [
+      { emoji: "🙂", sentiment: "positivo" },
+      { emoji: "😭", sentiment: "negativo" },
+      { emoji: "😡", sentiment: "negativo" },
+      { emoji: "😎", sentiment: "positivo" },
+    ],
+    challenge: "Encontrar el patrón que separa emociones positivas de negativas.",
+    deliverable: "Crear ai-pattern.md explicando el patrón encontrado.",
+    bonus: "Agregar más ejemplos al dataset.",
+  },
+  "ai-2": {
+    id: "ai-2",
+    zone: "AI Lab",
+    title: "AI 2 – Predecir Nuevos Casos",
+    problem: "Ahora el sistema debe clasificar nuevos emojis.",
+    test_cases: ["😃", "😤", "😐"],
+    challenge: "Predecir si cada emoji es positivo o negativo usando su modelo.",
+    deliverable: "Crear ai-predictions.md con sus predicciones y explicación.",
+    bonus: "Crear una regla automática para clasificar.",
+  },
+  "ai-core": {
+    id: "ai-core",
+    zone: "AI Core",
+    title: "AI Core – Misión Final",
+    problem: "El sistema de la ciudad debe integrarlo todo.",
+    challenge:
+      "Diseñar un sistema que combine sensores, rutas, descifrado y clasificación para ayudar al zorro a mantener segura la ciudad.",
+    deliverable: "Crear final-system.md explicando cómo conectaron todas las partes.",
+    bonus: "Proponer mejoras al sistema.",
+  },
+}
+
+const NODE_TO_MISSION_ID: Record<string, string> = {
+  start: "sensor-1",
+  "forest-1": "sensor-1",
+  "forest-2": "sensor-2",
+  "forest-3": "sensor-3",
+  "city-1": "traffic-1",
+  "city-2": "traffic-2",
+  "city-3": "traffic-3",
+  "vault-1": "vault-1",
+  "vault-2": "vault-2",
+  "vault-3": "vault-3",
+  "ai-1": "ai-1",
+  "ai-2": "ai-2",
+  "ai-final": "ai-core",
+}
+
 export function WorldMap() {
   const [draggingTeam, setDraggingTeam] = useState<string | null>(null)
+  const [activeNode, setActiveNode] = useState<MissionNodeData | null>(null)
   
   const { data: nodes, mutate: mutateNodes } = useSWR<MissionNodeData[]>("/api/nodes", fetcher, {
     revalidateOnFocus: false,
@@ -54,6 +234,7 @@ export function WorldMap() {
     setDraggingTeam(null)
   }, [])
   const mapRef = useRef<HTMLDivElement>(null)
+  const activeMission = activeNode ? MISSION_CARDS[NODE_TO_MISSION_ID[activeNode.id]] : null
 
   const handleTeamDrop = useCallback(
     async (teamId: string, nodeId: string) => {
@@ -276,7 +457,7 @@ export function WorldMap() {
         <MissionNode
           key={node.id}
           node={node}
-          onClick={() => {}}
+          onClick={() => setActiveNode(node)}
           onDrop={(teamId) => handleTeamDrop(teamId, node.id)}
           isDropTarget={draggingTeam !== null}
         />
@@ -346,6 +527,75 @@ export function WorldMap() {
         <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
         Synced
       </div>
+
+      <Dialog open={activeNode !== null} onOpenChange={(open) => !open && setActiveNode(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{activeMission?.title ?? activeNode?.label ?? "Challenge"}</DialogTitle>
+            <DialogDescription>
+              {activeMission?.zone ?? activeNode?.zone ?? ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeNode && activeMission && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Problema</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">{activeMission.problem}</CardContent>
+              </Card>
+
+              {(Boolean(activeMission.data) || Boolean(activeMission.dataset) || Boolean(activeMission.map) || Boolean(activeMission.test_cases)) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Datos</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    {Boolean(activeMission.data) && (
+                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{JSON.stringify(activeMission.data, null, 2)}</pre>
+                    )}
+                    {Boolean(activeMission.dataset) && (
+                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{JSON.stringify(activeMission.dataset, null, 2)}</pre>
+                    )}
+                    {activeMission.map && (
+                      <pre className="rounded-md bg-muted p-3 overflow-x-auto text-xs">{activeMission.map.join("\n")}</pre>
+                    )}
+                    {activeMission.test_cases && <p>Casos de prueba: {activeMission.test_cases.join(", ")}</p>}
+                    {activeMission.blocked && <p>Zonas bloqueadas: {activeMission.blocked.join(", ")}</p>}
+                    {activeMission.message && <p>Mensaje: {activeMission.message}</p>}
+                    {activeMission.hint && <p>Pista: {activeMission.hint}</p>}
+                    {activeMission.example && <p>Ejemplo: {activeMission.example}</p>}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reto</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">{activeMission.challenge}</CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Entregable</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">{activeMission.deliverable}</CardContent>
+              </Card>
+
+              {activeMission.bonus && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Bonus</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">{activeMission.bonus}</CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
