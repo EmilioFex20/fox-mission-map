@@ -158,27 +158,45 @@ export function WorldMap() {
     [teams, mutateTeams]
   )
 
-  // Generate path points for the winding road
+  const resetGame = useCallback(async () => {
+    // Reset nodes to default
+    await fetch("/api/nodes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reset" }),
+    })
+    mutateNodes()
+
+    // Clear all teams
+    await fetch("/api/teams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "clear" }),
+    })
+    mutateTeams()
+  }, [mutateNodes, mutateTeams])
+
+  // Generate path points for the winding road (scaled to 0-100% coordinate space)
   const pathD = `
-    M 80 580
-    Q 140 550, 200 520
-    Q 260 560, 320 600
-    Q 380 550, 440 500
-    Q 510 520, 580 550
-    Q 650 510, 720 480
-    Q 790 520, 860 560
-    Q 930 520, 1000 490
-    Q 1070 530, 1140 570
-    Q 1210 520, 1280 480
-    Q 1350 510, 1420 540
-    Q 1490 500, 1560 460
-    Q 1640 490, 1720 520
+    M 4.2 53.7
+    Q 7.3 51, 10.4 48.1
+    Q 13.5 51.9, 16.7 55.6
+    Q 19.8 50.9, 22.9 46.3
+    Q 26.6 48.1, 30.2 50.9
+    Q 33.9 47.2, 37.5 44.4
+    Q 41.1 48.1, 44.8 51.9
+    Q 48.4 48.1, 52.1 45.4
+    Q 55.7 49.1, 59.4 52.8
+    Q 63.0 48.1, 66.7 44.4
+    Q 70.4 47.2, 74.0 50.0
+    Q 77.6 46.3, 81.3 42.6
+    Q 85.4 45.4, 89.6 48.1
   `
 
   // Loading state
   if (!nodes || !teams) {
     return (
-      <div className="relative w-[1920px] h-[1080px] overflow-hidden bg-background flex items-center justify-center">
+      <div className="relative w-screen h-screen overflow-hidden bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-xl text-foreground font-semibold">Loading game world...</p>
@@ -188,18 +206,18 @@ export function WorldMap() {
   }
 
   return (
-    <div className="relative w-[1920px] h-[1080px] overflow-hidden" ref={mapRef}>
+    <div className="relative w-screen h-screen overflow-hidden" ref={mapRef}>
       {/* Background Landscape */}
       <MapBackground />
 
       {/* Path SVG */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1920 1080">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
         {/* Glowing path background */}
         <path
           d={pathD}
           fill="none"
           stroke="rgba(255, 220, 100, 0.3)"
-          strokeWidth="40"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           filter="url(#glow)"
@@ -209,25 +227,25 @@ export function WorldMap() {
           d={pathD}
           fill="none"
           stroke="rgba(255, 220, 100, 0.8)"
-          strokeWidth="24"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="0 50"
+          strokeDasharray="0 3"
         />
         {/* Path dots */}
         <path
           d={pathD}
           fill="none"
           stroke="#FEF3C7"
-          strokeWidth="8"
+          strokeWidth="0.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="2 40"
+          strokeDasharray="0.15 2.5"
         />
         {/* Glow filter */}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feGaussianBlur stdDeviation="0.5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -274,22 +292,22 @@ export function WorldMap() {
       </div>
 
       {/* Zone Labels */}
-      <div className="absolute top-28 left-[180px] text-center z-10">
+      <div className="absolute top-[12%] left-[10%] text-center z-10">
         <span className="px-4 py-2 bg-forest-green/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Sensor Forest
         </span>
       </div>
-      <div className="absolute top-28 left-[680px] text-center z-10">
+      <div className="absolute top-[12%] left-[35%] text-center z-10">
         <span className="px-4 py-2 bg-city-blue/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Traffic City
         </span>
       </div>
-      <div className="absolute top-28 left-[1100px] text-center z-10">
+      <div className="absolute top-[12%] left-[58%] text-center z-10">
         <span className="px-4 py-2 bg-vault-purple/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           Code Vault
         </span>
       </div>
-      <div className="absolute top-28 left-[1520px] text-center z-10">
+      <div className="absolute top-[12%] left-[80%] text-center z-10">
         <span className="px-4 py-2 bg-ai-cyan/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
           AI Core
         </span>
@@ -301,6 +319,14 @@ export function WorldMap() {
         className="absolute bottom-6 right-6 px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold text-lg shadow-lg hover:scale-105 transition-transform z-20"
       >
         + Add Team
+      </button>
+
+      {/* Reset Game Button */}
+      <button
+        onClick={resetGame}
+        className="absolute bottom-6 right-48 px-4 py-3 bg-destructive text-destructive-foreground rounded-full font-semibold text-sm shadow-lg hover:scale-105 transition-transform z-20"
+      >
+        Reset Game
       </button>
 
       {/* Legend */}

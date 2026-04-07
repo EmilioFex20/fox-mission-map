@@ -63,6 +63,9 @@ export async function POST(request: Request) {
       case "set":
         updatedTeams = body.teams
         break
+      case "clear":
+        updatedTeams = DEFAULT_TEAMS
+        break
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 })
     }

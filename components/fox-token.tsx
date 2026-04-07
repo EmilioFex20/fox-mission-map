@@ -34,8 +34,8 @@ export function FoxToken({ team, position, onDragStart, onNameChange, onRemove }
     }
   }
 
-  // Offset multiple tokens at the same position
-  const tokenOffset = parseInt(team.id.split("-")[1]) * 5 || 0
+  // Offset multiple tokens at the same position (in viewport-relative units)
+  const tokenOffset = parseInt(team.id.split("-")[1]) * 0.3 || 0
 
   return (
     <div
@@ -43,8 +43,8 @@ export function FoxToken({ team, position, onDragStart, onNameChange, onRemove }
       onDragStart={handleDragStart}
       className="absolute z-20 cursor-grab active:cursor-grabbing group"
       style={{
-        left: position.x - 35 + tokenOffset,
-        top: position.y - 80,
+        left: `calc(${position.x + tokenOffset}% - 35px)`,
+        top: `calc(${position.y}% - 80px)`,
       }}
     >
       {/* Token container */}
