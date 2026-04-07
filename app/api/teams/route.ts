@@ -25,7 +25,7 @@ const DEFAULT_TEAMS: TeamToken[] = [
 ]
 
 // In-memory store for when Redis is not available
-let memoryStore: TeamToken[] = DEFAULT_TEAMS
+let memoryStore: TeamToken[] = [...DEFAULT_TEAMS]
 
 export async function GET() {
   try {
@@ -46,8 +46,8 @@ export async function GET() {
     return NextResponse.json(memoryStore)
   } catch (error) {
     console.error("Error fetching teams:", error)
-    // Fall back to default teams on error instead of returning 500
-    return NextResponse.json(DEFAULT_TEAMS)
+    // Preserve in-memory state in non-Redis mode even on transient errors
+    return NextResponse.json(isRedisAvailable ? DEFAULT_TEAMS : memoryStore)
   }
 }
 
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         updatedTeams = body.teams
         break
       case "clear":
-        updatedTeams = DEFAULT_TEAMS
+        updatedTeams = [...DEFAULT_TEAMS]
         break
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 })

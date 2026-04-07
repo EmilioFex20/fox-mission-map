@@ -39,8 +39,9 @@ export function FoxToken({ team, position, onDragStart, onDragEnd, onNameChange,
     }
   }
 
-  // Offset multiple tokens at the same position (in viewport-relative units)
-  const tokenOffset = parseInt(team.id.split("-")[1]) * 0.3 || 0
+  // Keep token offsets bounded so timestamp-based ids do not push tokens off-screen.
+  const offsetSeed = Number.parseInt(team.id.split("-")[1] ?? "0", 10)
+  const tokenOffset = Number.isFinite(offsetSeed) ? ((offsetSeed % 9) - 4) * 0.8 : 0
 
   return (
     <div

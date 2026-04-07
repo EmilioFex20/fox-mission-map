@@ -1,3 +1,5 @@
+// Archived copy kept for reference only.
+// Active component used by app/page.tsx is components/world-map.tsx.
 "use client"
 
 import { useRef, useCallback, useState } from "react"

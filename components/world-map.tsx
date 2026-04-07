@@ -42,10 +42,12 @@ export function WorldMap() {
   const { data: nodes, mutate: mutateNodes } = useSWR<MissionNodeData[]>("/api/nodes", fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
+    dedupingInterval: 0,
   })
   const { data: teams, mutate: mutateTeams } = useSWR<TeamToken[]>("/api/teams", fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
+    dedupingInterval: 0,
   })
 
   const handleDragEnd = useCallback(() => {
@@ -63,18 +65,26 @@ export function WorldMap() {
       const nextState: NodeState =
         node.state === "locked" ? "unlocked" : node.state === "unlocked" ? "completed" : "locked"
 
+      const previousNodes = nodes
+      const optimisticNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state: nextState } : n))
+      mutateNodes(optimisticNodes, false)
+
       try {
         const res = await fetch("/api/nodes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "update", nodeId, state: nextState }),
         })
-        
-        if (res.ok) {
-          await mutateNodes()
+
+        if (!res.ok) {
+          throw new Error(`Node update failed with status ${res.status}`)
         }
+
+        const updatedNodes = (await res.json()) as MissionNodeData[]
+        await mutateNodes(updatedNodes, false)
       } catch (error) {
         console.error("Failed to update node:", error)
+        await mutateNodes(previousNodes, false)
       }
     },
     [nodes, mutateNodes]
@@ -84,20 +94,26 @@ export function WorldMap() {
     async (teamId: string, nodeId: string) => {
       if (!teams) return
 
-      const updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, currentNodeId: nodeId } : team))
-      
+      const previousTeams = teams
+      const optimisticTeams = teams.map((team) => (team.id === teamId ? { ...team, currentNodeId: nodeId } : team))
+      mutateTeams(optimisticTeams, false)
+
       try {
         const res = await fetch("/api/teams", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "update", teamId, updates: { currentNodeId: nodeId } }),
         })
-        
-        if (res.ok) {
-          await mutateTeams()
+
+        if (!res.ok) {
+          throw new Error(`Team drop failed with status ${res.status}`)
         }
+
+        const updatedTeams = (await res.json()) as TeamToken[]
+        await mutateTeams(updatedTeams, false)
       } catch (error) {
         console.error("Failed to update team:", error)
+        await mutateTeams(previousTeams, false)
       }
     },
     [teams, mutateTeams]
@@ -107,18 +123,26 @@ export function WorldMap() {
     async (teamId: string, newName: string) => {
       if (!teams) return
 
+      const previousTeams = teams
+      const optimisticTeams = teams.map((team) => (team.id === teamId ? { ...team, name: newName } : team))
+      mutateTeams(optimisticTeams, false)
+
       try {
         const res = await fetch("/api/teams", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "update", teamId, updates: { name: newName } }),
         })
-        
-        if (res.ok) {
-          await mutateTeams()
+
+        if (!res.ok) {
+          throw new Error(`Team rename failed with status ${res.status}`)
         }
+
+        const updatedTeams = (await res.json()) as TeamToken[]
+        await mutateTeams(updatedTeams, false)
       } catch (error) {
         console.error("Failed to rename team:", error)
+        await mutateTeams(previousTeams, false)
       }
     },
     [teams, mutateTeams]
@@ -136,18 +160,25 @@ export function WorldMap() {
       currentNodeId: "start",
     }
 
+    const previousTeams = teams
+    mutateTeams([...teams, newTeam], false)
+
     try {
       const res = await fetch("/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", team: newTeam }),
       })
-      
-      if (res.ok) {
-        await mutateTeams()
+
+      if (!res.ok) {
+        throw new Error(`Team add failed with status ${res.status}`)
       }
+
+      const updatedTeams = (await res.json()) as TeamToken[]
+      await mutateTeams(updatedTeams, false)
     } catch (error) {
       console.error("Failed to add team:", error)
+      await mutateTeams(previousTeams, false)
     }
   }, [teams, mutateTeams])
 
@@ -155,37 +186,55 @@ export function WorldMap() {
     async (teamId: string) => {
       if (!teams) return
 
+      const previousTeams = teams
+      const optimisticTeams = teams.filter((team) => team.id !== teamId)
+      mutateTeams(optimisticTeams, false)
+
       try {
         const res = await fetch("/api/teams", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "remove", teamId }),
         })
-        
-        if (res.ok) {
-          await mutateTeams()
+
+        if (!res.ok) {
+          throw new Error(`Team remove failed with status ${res.status}`)
         }
+
+        const updatedTeams = (await res.json()) as TeamToken[]
+        await mutateTeams(updatedTeams, false)
       } catch (error) {
         console.error("Failed to remove team:", error)
+        await mutateTeams(previousTeams, false)
       }
     },
     [teams, mutateTeams]
   )
 
   const resetGame = useCallback(async () => {
-    await fetch("/api/nodes", {
+    const nodesRes = await fetch("/api/nodes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "reset" }),
     })
-    mutateNodes()
+    if (nodesRes.ok) {
+      const updatedNodes = (await nodesRes.json()) as MissionNodeData[]
+      await mutateNodes(updatedNodes, false)
+    } else {
+      await mutateNodes()
+    }
 
-    await fetch("/api/teams", {
+    const teamsRes = await fetch("/api/teams", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "clear" }),
     })
-    mutateTeams()
+    if (teamsRes.ok) {
+      const updatedTeams = (await teamsRes.json()) as TeamToken[]
+      await mutateTeams(updatedTeams, false)
+    } else {
+      await mutateTeams()
+    }
   }, [mutateNodes, mutateTeams])
 
   const pathD = `
