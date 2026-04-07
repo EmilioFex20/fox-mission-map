@@ -271,6 +271,11 @@ export function WorldMap() {
           onClick={() => handleNodeClick(node.id)}
           onDrop={(teamId) => handleTeamDrop(teamId, node.id)}
           isDropTarget={draggingTeam !== null}
+          teamsAtNode={teams.filter((team) => team.currentNodeId === node.id).sort((a, b) => a.id.localeCompare(b.id))}
+          onTeamNameChange={handleTeamNameChange}
+          onTeamRemove={removeTeam}
+          onTeamDragStart={(teamId) => setDraggingTeam(teamId)}
+          onTeamDragEnd={handleDragEnd}
         />
       ))}
 
