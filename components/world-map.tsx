@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useRef, useCallback } from "react"
+import useSWR from "swr"
 import { FoxToken } from "./fox-token"
 import { MissionNode } from "./mission-node"
 import { MapBackground } from "./map-background"
@@ -23,26 +24,6 @@ export interface TeamToken {
   currentNodeId: string
 }
 
-const MISSION_NODES: MissionNodeData[] = [
-  // Sensor Forest Zone
-  { id: "start", x: 80, y: 580, zone: "forest", label: "Start", state: "unlocked" },
-  { id: "forest-1", x: 200, y: 520, zone: "forest", label: "Sensor 1", state: "locked" },
-  { id: "forest-2", x: 320, y: 600, zone: "forest", label: "Sensor 2", state: "locked" },
-  { id: "forest-3", x: 440, y: 500, zone: "forest", label: "Sensor 3", state: "locked" },
-  // Traffic City Zone
-  { id: "city-1", x: 580, y: 550, zone: "city", label: "Traffic 1", state: "locked" },
-  { id: "city-2", x: 720, y: 480, zone: "city", label: "Traffic 2", state: "locked" },
-  { id: "city-3", x: 860, y: 560, zone: "city", label: "Traffic 3", state: "locked" },
-  // Code Vault Zone
-  { id: "vault-1", x: 1000, y: 490, zone: "vault", label: "Vault 1", state: "locked" },
-  { id: "vault-2", x: 1140, y: 570, zone: "vault", label: "Vault 2", state: "locked" },
-  { id: "vault-3", x: 1280, y: 480, zone: "vault", label: "Vault 3", state: "locked" },
-  // AI Core Zone
-  { id: "ai-1", x: 1420, y: 540, zone: "ai", label: "AI 1", state: "locked" },
-  { id: "ai-2", x: 1560, y: 460, zone: "ai", label: "AI 2", state: "locked" },
-  { id: "ai-final", x: 1720, y: 520, zone: "ai", label: "AI Core", state: "locked" },
-]
-
 const TOKEN_COLORS = [
   "#3B82F6", // blue
   "#F97316", // orange
@@ -53,41 +34,88 @@ const TOKEN_COLORS = [
   "#06B6D4", // cyan
 ]
 
-const initialTeams: TeamToken[] = [
-  { id: "team-1", name: "Team Alpha", color: TOKEN_COLORS[0], currentNodeId: "start" },
-  { id: "team-2", name: "Team Beta", color: TOKEN_COLORS[1], currentNodeId: "start" },
-  { id: "team-3", name: "Team Gamma", color: TOKEN_COLORS[2], currentNodeId: "start" },
-]
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function WorldMap() {
-  const [nodes, setNodes] = useState<MissionNodeData[]>(MISSION_NODES)
-  const [teams, setTeams] = useState<TeamToken[]>(initialTeams)
-  const [draggingTeam, setDraggingTeam] = useState<string | null>(null)
+  const { data: nodes, mutate: mutateNodes } = useSWR<MissionNodeData[]>("/api/nodes", fetcher, {
+    refreshInterval: 3000, // Poll every 3 seconds for real-time updates
+  })
+  const { data: teams, mutate: mutateTeams } = useSWR<TeamToken[]>("/api/teams", fetcher, {
+    refreshInterval: 3000,
+  })
+
+  const [draggingTeam, setDraggingTeam] = [null, () => {}] as [string | null, (v: string | null) => void]
   const mapRef = useRef<HTMLDivElement>(null)
 
-  const handleNodeClick = useCallback((nodeId: string) => {
-    setNodes((prev) =>
-      prev.map((node) => {
-        if (node.id === nodeId) {
-          const nextState: NodeState =
-            node.state === "locked" ? "unlocked" : node.state === "unlocked" ? "completed" : "locked"
-          return { ...node, state: nextState }
-        }
-        return node
+  const handleNodeClick = useCallback(
+    async (nodeId: string) => {
+      if (!nodes) return
+
+      const node = nodes.find((n) => n.id === nodeId)
+      if (!node) return
+
+      const nextState: NodeState =
+        node.state === "locked" ? "unlocked" : node.state === "unlocked" ? "completed" : "locked"
+
+      // Optimistic update
+      const updatedNodes = nodes.map((n) => (n.id === nodeId ? { ...n, state: nextState } : n))
+      mutateNodes(updatedNodes, false)
+
+      // Persist to Redis
+      await fetch("/api/nodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", nodeId, state: nextState }),
       })
-    )
-  }, [])
 
-  const handleTeamDrop = useCallback((teamId: string, nodeId: string) => {
-    setTeams((prev) => prev.map((team) => (team.id === teamId ? { ...team, currentNodeId: nodeId } : team)))
-    setDraggingTeam(null)
-  }, [])
+      mutateNodes()
+    },
+    [nodes, mutateNodes]
+  )
 
-  const handleTeamNameChange = useCallback((teamId: string, newName: string) => {
-    setTeams((prev) => prev.map((team) => (team.id === teamId ? { ...team, name: newName } : team)))
-  }, [])
+  const handleTeamDrop = useCallback(
+    async (teamId: string, nodeId: string) => {
+      if (!teams) return
 
-  const addNewTeam = useCallback(() => {
+      // Optimistic update
+      const updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, currentNodeId: nodeId } : team))
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", teamId, updates: { currentNodeId: nodeId } }),
+      })
+
+      mutateTeams()
+    },
+    [teams, mutateTeams]
+  )
+
+  const handleTeamNameChange = useCallback(
+    async (teamId: string, newName: string) => {
+      if (!teams) return
+
+      // Optimistic update
+      const updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, name: newName } : team))
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", teamId, updates: { name: newName } }),
+      })
+
+      mutateTeams()
+    },
+    [teams, mutateTeams]
+  )
+
+  const addNewTeam = useCallback(async () => {
+    if (!teams) return
+
     const newTeamIndex = teams.length
     const colorIndex = newTeamIndex % TOKEN_COLORS.length
     const newTeam: TeamToken = {
@@ -96,43 +124,100 @@ export function WorldMap() {
       color: TOKEN_COLORS[colorIndex],
       currentNodeId: "start",
     }
-    setTeams((prev) => [...prev, newTeam])
-  }, [teams.length])
 
-  const removeTeam = useCallback((teamId: string) => {
-    setTeams((prev) => prev.filter((team) => team.id !== teamId))
-  }, [])
+    // Optimistic update
+    mutateTeams([...teams, newTeam], false)
 
-  // Generate path points for the winding road
+    // Persist to Redis
+    await fetch("/api/teams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "add", team: newTeam }),
+    })
+
+    mutateTeams()
+  }, [teams, mutateTeams])
+
+  const removeTeam = useCallback(
+    async (teamId: string) => {
+      if (!teams) return
+
+      // Optimistic update
+      const updatedTeams = teams.filter((team) => team.id !== teamId)
+      mutateTeams(updatedTeams, false)
+
+      // Persist to Redis
+      await fetch("/api/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove", teamId }),
+      })
+
+      mutateTeams()
+    },
+    [teams, mutateTeams]
+  )
+
+  const resetGame = useCallback(async () => {
+    // Reset nodes to default
+    await fetch("/api/nodes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reset" }),
+    })
+    mutateNodes()
+
+    // Clear all teams
+    await fetch("/api/teams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "clear" }),
+    })
+    mutateTeams()
+  }, [mutateNodes, mutateTeams])
+
+  // Generate path points for the winding road (scaled to 0-100% coordinate space)
   const pathD = `
-    M 80 580
-    Q 140 550, 200 520
-    Q 260 560, 320 600
-    Q 380 550, 440 500
-    Q 510 520, 580 550
-    Q 650 510, 720 480
-    Q 790 520, 860 560
-    Q 930 520, 1000 490
-    Q 1070 530, 1140 570
-    Q 1210 520, 1280 480
-    Q 1350 510, 1420 540
-    Q 1490 500, 1560 460
-    Q 1640 490, 1720 520
+    M 4.2 53.7
+    Q 7.3 51, 10.4 48.1
+    Q 13.5 51.9, 16.7 55.6
+    Q 19.8 50.9, 22.9 46.3
+    Q 26.6 48.1, 30.2 50.9
+    Q 33.9 47.2, 37.5 44.4
+    Q 41.1 48.1, 44.8 51.9
+    Q 48.4 48.1, 52.1 45.4
+    Q 55.7 49.1, 59.4 52.8
+    Q 63.0 48.1, 66.7 44.4
+    Q 70.4 47.2, 74.0 50.0
+    Q 77.6 46.3, 81.3 42.6
+    Q 85.4 45.4, 89.6 48.1
   `
 
+  // Loading state
+  if (!nodes || !teams) {
+    return (
+      <div className="relative w-screen h-screen overflow-hidden bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-xl text-foreground font-semibold">Loading game world...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative w-[1920px] h-[1080px] overflow-hidden" ref={mapRef}>
+    <div className="relative w-screen h-screen overflow-hidden" ref={mapRef}>
       {/* Background Landscape */}
       <MapBackground />
 
       {/* Path SVG */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1920 1080">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
         {/* Glowing path background */}
         <path
           d={pathD}
           fill="none"
           stroke="rgba(255, 220, 100, 0.3)"
-          strokeWidth="40"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           filter="url(#glow)"
@@ -142,25 +227,25 @@ export function WorldMap() {
           d={pathD}
           fill="none"
           stroke="rgba(255, 220, 100, 0.8)"
-          strokeWidth="24"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="0 50"
+          strokeDasharray="0 3"
         />
         {/* Path dots */}
         <path
           d={pathD}
           fill="none"
           stroke="#FEF3C7"
-          strokeWidth="8"
+          strokeWidth="0.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="2 40"
+          strokeDasharray="0.15 2.5"
         />
         {/* Glow filter */}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feGaussianBlur stdDeviation="0.5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -207,24 +292,24 @@ export function WorldMap() {
       </div>
 
       {/* Zone Labels */}
-      <div className="absolute top-28 left-[180px] text-center z-10">
+      <div className="absolute top-[12%] left-[10%] text-center z-10">
         <span className="px-4 py-2 bg-forest-green/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
-          🌲📡 Sensor Forest
+          Sensor Forest
         </span>
       </div>
-      <div className="absolute top-28 left-[680px] text-center z-10">
+      <div className="absolute top-[12%] left-[35%] text-center z-10">
         <span className="px-4 py-2 bg-city-blue/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
-          🚦🏙️ Traffic City
+          Traffic City
         </span>
       </div>
-      <div className="absolute top-28 left-[1100px] text-center z-10">
+      <div className="absolute top-[12%] left-[58%] text-center z-10">
         <span className="px-4 py-2 bg-vault-purple/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
-          🔐💻 Code Vault
+          Code Vault
         </span>
       </div>
-      <div className="absolute top-28 left-[1520px] text-center z-10">
+      <div className="absolute top-[12%] left-[80%] text-center z-10">
         <span className="px-4 py-2 bg-ai-cyan/80 rounded-full text-foreground text-lg font-semibold shadow-lg">
-          🧠⚡ AI Core
+          AI Core
         </span>
       </div>
 
@@ -236,13 +321,21 @@ export function WorldMap() {
         + Add Team
       </button>
 
+      {/* Reset Game Button */}
+      <button
+        onClick={resetGame}
+        className="absolute bottom-6 right-48 px-4 py-3 bg-destructive text-destructive-foreground rounded-full font-semibold text-sm shadow-lg hover:scale-105 transition-transform z-20"
+      >
+        Reset Game
+      </button>
+
       {/* Legend */}
       <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl z-20">
         <h3 className="font-semibold text-card-foreground mb-3">Node States</h3>
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-muted border-2 border-muted-foreground/50 flex items-center justify-center text-xs">
-              🔒
+              L
             </div>
             <span className="text-sm text-card-foreground">Locked</span>
           </div>
@@ -252,11 +345,17 @@ export function WorldMap() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs text-white">
-              ✔
+              OK
             </div>
             <span className="text-sm text-card-foreground">Completed</span>
           </div>
         </div>
+      </div>
+
+      {/* Sync Status Indicator */}
+      <div className="absolute top-6 right-6 px-3 py-1 bg-card/80 backdrop-blur-sm rounded-full text-sm text-card-foreground z-20">
+        <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+        Synced
       </div>
     </div>
   )

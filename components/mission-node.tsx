@@ -75,8 +75,8 @@ export function MissionNode({ node, onClick, onDrop, isDropTarget }: MissionNode
         ${!isHovered ? "hover:scale-110" : ""}
       `}
       style={{
-        left: node.x - 32,
-        top: node.y - 32,
+        left: `calc(${node.x}% - 32px)`,
+        top: `calc(${node.y}% - 32px)`,
       }}
       title={`${node.label} - Click to change state`}
     >

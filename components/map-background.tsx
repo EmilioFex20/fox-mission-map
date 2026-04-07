@@ -46,73 +46,73 @@ export function MapBackground() {
       </svg>
 
       {/* Forest Zone (left) */}
-      <div className="absolute bottom-[180px] left-[50px]">
+      <div className="absolute bottom-[17%] left-[2.6%]">
         <Tree scale={1.3} />
       </div>
-      <div className="absolute bottom-[200px] left-[120px]">
+      <div className="absolute bottom-[18.5%] left-[6.3%]">
         <Tree scale={1} />
       </div>
-      <div className="absolute bottom-[160px] left-[180px]">
+      <div className="absolute bottom-[15%] left-[9.4%]">
         <SensorTower />
       </div>
-      <div className="absolute bottom-[190px] left-[280px]">
+      <div className="absolute bottom-[17.6%] left-[14.6%]">
         <Tree scale={1.1} />
       </div>
-      <div className="absolute bottom-[170px] left-[350px]">
+      <div className="absolute bottom-[15.7%] left-[18.2%]">
         <Tree scale={0.9} />
       </div>
-      <div className="absolute bottom-[185px] left-[420px]">
+      <div className="absolute bottom-[17.1%] left-[21.9%]">
         <SensorTower />
       </div>
-      <div className="absolute bottom-[200px] left-[500px]">
+      <div className="absolute bottom-[18.5%] left-[26%]">
         <Tree scale={1.2} />
       </div>
 
       {/* City Zone (middle-left) */}
-      <div className="absolute bottom-[200px] left-[560px]">
+      <div className="absolute bottom-[18.5%] left-[29.2%]">
         <Building height={120} color="#64748B" />
       </div>
-      <div className="absolute bottom-[200px] left-[620px]">
+      <div className="absolute bottom-[18.5%] left-[32.3%]">
         <Building height={90} color="#475569" />
       </div>
-      <div className="absolute bottom-[200px] left-[700px]">
+      <div className="absolute bottom-[18.5%] left-[36.5%]">
         <TrafficLight />
       </div>
-      <div className="absolute bottom-[200px] left-[780px]">
+      <div className="absolute bottom-[18.5%] left-[40.6%]">
         <Building height={140} color="#334155" />
       </div>
-      <div className="absolute bottom-[200px] left-[850px]">
+      <div className="absolute bottom-[18.5%] left-[44.3%]">
         <Building height={100} color="#64748B" />
       </div>
-      <div className="absolute bottom-[200px] left-[920px]">
+      <div className="absolute bottom-[18.5%] left-[47.9%]">
         <TrafficLight />
       </div>
 
       {/* Vault Zone (middle-right) */}
-      <div className="absolute bottom-[200px] left-[980px]">
+      <div className="absolute bottom-[18.5%] left-[51%]">
         <VaultStructure />
       </div>
-      <div className="absolute bottom-[220px] left-[1100px]">
+      <div className="absolute bottom-[20.4%] left-[57.3%]">
         <CodeSymbol symbol="{ }" x={0} y={0} />
       </div>
-      <div className="absolute bottom-[200px] left-[1180px]">
+      <div className="absolute bottom-[18.5%] left-[61.5%]">
         <VaultDoor />
       </div>
-      <div className="absolute bottom-[230px] left-[1300px]">
+      <div className="absolute bottom-[21.3%] left-[67.7%]">
         <CodeSymbol symbol="</>" x={0} y={0} />
       </div>
 
       {/* AI Core Zone (right) */}
-      <div className="absolute bottom-[200px] left-[1400px]">
+      <div className="absolute bottom-[18.5%] left-[72.9%]">
         <AIReactor scale={0.8} />
       </div>
-      <div className="absolute bottom-[200px] left-[1550px]">
+      <div className="absolute bottom-[18.5%] left-[80.7%]">
         <NeuralNode />
       </div>
-      <div className="absolute bottom-[200px] left-[1680px]">
+      <div className="absolute bottom-[18.5%] left-[87.5%]">
         <AIReactor scale={1.2} />
       </div>
-      <div className="absolute bottom-[220px] left-[1800px]">
+      <div className="absolute bottom-[20.4%] left-[93.8%]">
         <NeuralNode />
       </div>
 
