@@ -47,6 +47,8 @@ type MissionCard = {
   deliverable: string
   resource_link?: { label: string; url: string }
   bonus?: string
+  questions?: string[]
+  presentation?: string
   steps?: string[]
   repository_structure?: Record<string, string>
   data?: unknown
@@ -237,6 +239,22 @@ const MISSION_CARDS: Record<string, MissionCard> = {
     deliverable: "Crear final-system.md explicando cómo conectaron todas las partes.",
     bonus: "Proponer mejoras al sistema.",
   },
+  finish: {
+    id: "finish",
+    zone: "Finish",
+    title: "🏁 Mission Complete - Save the System",
+    problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar como lograron restaurar el sistema.",
+    challenge: "Preparar una breve explicacion de como su equipo resolvio los retos y como conectaron todas las partes del sistema.",
+    questions: [
+      "Como detecta su sistema actividad usando sensores?",
+      "Como decide el zorro que ruta tomar?",
+      "Como descifran mensajes en el Code Vault?",
+      "Como clasifica emociones su modelo de AI?",
+    ],
+    deliverable: "Crear un archivo final-system.md en su repositorio explicando su solucion completa.",
+    presentation: "Cada equipo tendra 1-2 minutos para explicar su sistema al resto del grupo.",
+    bonus: "Que mejorarian si tuvieran mas tiempo?",
+  },
 }
 
 const NODE_TO_MISSION_ID: Record<string, string> = {
@@ -253,6 +271,7 @@ const NODE_TO_MISSION_ID: Record<string, string> = {
   "ai-1": "ai-1",
   "ai-2": "ai-2",
   "ai-final": "ai-core",
+  finish: "finish",
 }
 
 const DEFAULT_MISSION_THEME: MissionTheme = {
@@ -310,6 +329,15 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-cyan-300 bg-cyan-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-cyan-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-cyan-200 text-slate-800",
+  },
+  Finish: {
+    dialogClass: "border-amber-500 bg-amber-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
+    dialogTitleClass: "text-amber-900",
+    dialogDescriptionClass: "text-amber-800",
+    zonePillClass: "bg-amber-100 text-amber-800",
+    cardClass: "border-amber-300 bg-amber-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
+    cardHeaderClass: "bg-amber-200 rounded-t-xl",
+    dataBoxClass: "bg-white border border-amber-200 text-slate-800",
   },
 }
 
@@ -496,6 +524,7 @@ export function WorldMap() {
     Q 70.4 47.2, 74.0 50.0
     Q 77.6 46.3, 81.3 42.6
     Q 85.4 45.4, 89.6 48.1
+    Q 93.5 45.4, 96.2 42.5
   `
 
   if (!nodes || !teams) {
@@ -700,6 +729,21 @@ export function WorldMap() {
                 </Card>
               )}
 
+              {Boolean(activeMission.questions) && (
+                <Card className={missionTheme.cardClass}>
+                  <CardHeader className={missionTheme.cardHeaderClass}>
+                    <CardTitle>Preguntas guia</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm py-6">
+                    <ul className="list-disc pl-5 space-y-1">
+                      {activeMission.questions?.map((question) => (
+                        <li key={question}>{question}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card className={missionTheme.cardClass}>
                 <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Reto</CardTitle>
@@ -713,6 +757,11 @@ export function WorldMap() {
                 </CardHeader>
                 <CardContent className="text-sm py-6 space-y-2">
                   <p>{activeMission.deliverable}</p>
+                  {activeMission.presentation && (
+                    <p>
+                      <span className="font-semibold">Presentacion:</span> {activeMission.presentation}
+                    </p>
+                  )}
                   {activeMission.resource_link && (
                     <p>
                       Recurso: {" "}

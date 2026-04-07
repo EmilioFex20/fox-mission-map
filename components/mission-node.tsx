@@ -58,6 +58,7 @@ export function MissionNode({ node, onClick, onDrop, isDropTarget }: MissionNode
   const isUnlocked = node.state === "unlocked"
   const isCompleted = node.state === "completed"
   const isLocked = node.state === "locked"
+  const isFinishNode = node.id === "finish"
 
   return (
     <button
@@ -81,10 +82,11 @@ export function MissionNode({ node, onClick, onDrop, isDropTarget }: MissionNode
       title={`${node.label} - Click to change state`}
     >
       {isLocked && <span className="text-2xl">🔒</span>}
-      {isUnlocked && (
+      {isUnlocked && !isFinishNode && (
         <div className="w-8 h-8 rounded-full bg-white/30 animate-ping absolute" />
       )}
-      {isUnlocked && <span className="text-2xl z-10">⭐</span>}
+      {isUnlocked && !isFinishNode && <span className="text-2xl z-10">⭐</span>}
+      {isFinishNode && <span className="text-2xl z-10">🚩</span>}
       {isCompleted && <span className="text-2xl text-white">✔</span>}
 
       {/* Node label */}

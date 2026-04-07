@@ -31,6 +31,7 @@ const DEFAULT_NODES: MissionNodeData[] = [
   { id: "ai-1", x: 74.0, y: 50.0, zone: "ai", label: "AI 1", state: "unlocked" },
   { id: "ai-2", x: 81.3, y: 42.6, zone: "ai", label: "AI 2", state: "unlocked" },
   { id: "ai-final", x: 89.6, y: 48.1, zone: "ai", label: "AI Core", state: "unlocked" },
+  { id: "finish", x: 96.2, y: 42.5, zone: "ai", label: "Finish", state: "unlocked" },
 ]
 
 // In-memory store for when Redis is not available
@@ -38,6 +39,24 @@ let memoryStore: MissionNodeData[] = [...DEFAULT_NODES]
 
 function forceUnlocked(nodes: MissionNodeData[]): MissionNodeData[] {
   return nodes.map((node) => ({ ...node, state: "unlocked" }))
+}
+
+function ensureAllDefaultNodes(nodes: MissionNodeData[]): MissionNodeData[] {
+  const byId = new Map(nodes.map((node) => [node.id, node]))
+  for (const defaultNode of DEFAULT_NODES) {
+    if (!byId.has(defaultNode.id)) {
+      byId.set(defaultNode.id, defaultNode)
+    }
+  }
+
+  return Array.from(byId.values()).sort((a, b) => {
+    const ai = DEFAULT_NODES.findIndex((n) => n.id === a.id)
+    const bi = DEFAULT_NODES.findIndex((n) => n.id === b.id)
+    if (ai === -1 && bi === -1) return 0
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
 }
 
 export async function GET() {
@@ -52,7 +71,7 @@ export async function GET() {
         return NextResponse.json(DEFAULT_NODES)
       }
 
-      const unlockedNodes = forceUnlocked(nodes)
+      const unlockedNodes = forceUnlocked(ensureAllDefaultNodes(nodes))
       if (JSON.stringify(unlockedNodes) !== JSON.stringify(nodes)) {
         await redis.set(KEYS.NODES, unlockedNodes)
       }
@@ -61,7 +80,7 @@ export async function GET() {
     }
 
     // Otherwise use in-memory store
-    memoryStore = forceUnlocked(memoryStore)
+    memoryStore = forceUnlocked(ensureAllDefaultNodes(memoryStore))
     return NextResponse.json(memoryStore)
   } catch (error) {
     console.error("Error fetching nodes:", error)
@@ -76,7 +95,7 @@ export async function POST(request: Request) {
     const { action, nodeId, state, nodes: newNodes } = body
 
     if (action === "set") {
-      const unlockedNodes = forceUnlocked(newNodes)
+      const unlockedNodes = forceUnlocked(ensureAllDefaultNodes(newNodes))
       if (isRedisAvailable && redis) {
         await redis.set(KEYS.NODES, unlockedNodes)
       } else {
@@ -94,7 +113,7 @@ export async function POST(request: Request) {
         nodes = memoryStore
       }
       
-      const updatedNodes = forceUnlocked(nodes.map((n) => (n.id === nodeId ? { ...n, state } : n)))
+      const updatedNodes = forceUnlocked(ensureAllDefaultNodes(nodes.map((n) => (n.id === nodeId ? { ...n, state } : n))))
       
       if (isRedisAvailable && redis) {
         await redis.set(KEYS.NODES, updatedNodes)
