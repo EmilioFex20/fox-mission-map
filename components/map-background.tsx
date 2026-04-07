@@ -175,6 +175,19 @@ function SensorTower() {
 
 function Building({ height, color }: { height: number; color: string }) {
   const windowRows = Math.floor(height / 25)
+  // Deterministic pattern for window lights based on position
+  const isLit = (row: number, col: number) => {
+    const pattern = [
+      [true, false, true],
+      [false, true, false],
+      [true, true, false],
+      [false, false, true],
+      [true, false, false],
+      [false, true, true],
+    ]
+    return pattern[row % pattern.length][col % 3]
+  }
+  
   return (
     <svg width="50" height={height + 10} viewBox={`0 0 50 ${height + 10}`}>
       <rect x="5" y="10" width="40" height={height} fill={color} rx="3" />
@@ -188,7 +201,7 @@ function Building({ height, color }: { height: number; color: string }) {
             width="8"
             height="12"
             fill="#FEF3C7"
-            opacity={Math.random() > 0.3 ? 1 : 0.3}
+            opacity={isLit(row, col) ? 1 : 0.3}
             rx="1"
           />
         ))
