@@ -78,6 +78,7 @@ export function MissionNode({
   const isCompleted = node.state === "completed"
   const isLocked = node.state === "locked"
   const isFinishNode = node.id === "finish"
+  const isStartNode = node.id === "start"
   const previewTeams = teamsAtNode.slice(0, 3)
   const hiddenCount = Math.max(teamsAtNode.length - previewTeams.length, 0)
 
@@ -133,7 +134,8 @@ export function MissionNode({
         {isUnlocked && !isFinishNode && (
           <div className="w-8 h-8 rounded-full bg-white/30 animate-ping absolute" />
         )}
-        {isUnlocked && !isFinishNode && <span className="text-2xl z-10">⭐</span>}
+        {isUnlocked && !isFinishNode && !isStartNode && <span className="text-2xl z-10">⭐</span>}
+        {isUnlocked && isStartNode && <span className="text-2xl z-10">🏁</span>}
         {isFinishNode && <span className="text-2xl z-10">🚩</span>}
         {isCompleted && <span className="text-2xl text-white">✔</span>}
       </button>
