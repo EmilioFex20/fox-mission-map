@@ -7,6 +7,7 @@ import { MissionNode } from "./mission-node"
 import { MapBackground } from "./map-background"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 
 export type NodeState = "locked" | "unlocked" | "completed"
 
@@ -38,10 +39,8 @@ const TOKEN_COLORS = [
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-type MissionCard = {
-  id: string
-  zone: string
-  title: string
+type MissionVersion = {
+  name: "basica" | "hardcore"
   problem: string
   challenge: string
   deliverable: string
@@ -61,6 +60,13 @@ type MissionCard = {
   test_cases?: string[]
 }
 
+type MissionCard = {
+  id: string
+  zone: string
+  title: string
+  versions: MissionVersion[]
+}
+
 type MissionTheme = {
   dialogClass: string
   dialogTitleClass: string
@@ -76,184 +82,338 @@ const MISSION_CARDS: Record<string, MissionCard> = {
     id: "start",
     zone: "Start",
     title: "Start – Setup GitHub",
-    problem: "Antes de comenzar la aventura, cada equipo necesita preparar su base de operaciones usando GitHub.",
-    challenge: "Configurar un repositorio donde guardaran todas las soluciones de las misiones.",
-    steps: [
-      "Crear una cuenta en GitHub si aun no tienen una",
-      "Un miembro del equipo crea un repositorio nuevo llamado hackhexa-team-[nombre-del-equipo]",
-      "Invitar a las demas integrantes del equipo como colaboradoras",
-      "Crear un archivo README.md con el nombre del equipo",
-      "Hacer el primer commit al repositorio",
+    versions: [
+      {
+        name: "basica",
+        problem: "Antes de comenzar la aventura, cada equipo necesita preparar su base de operaciones usando GitHub.",
+        challenge: "Configurar un repositorio donde guardaran todas las soluciones de las misiones.",
+        steps: [
+          "Crear una cuenta en GitHub si aun no tienen una",
+          "Un miembro del equipo crea un repositorio nuevo llamado hackhexa-team-[nombre-del-equipo]",
+          "Invitar a las demas integrantes del equipo como colaboradoras",
+          "Crear un archivo README.md con el nombre del equipo",
+          "Hacer el primer commit al repositorio",
+        ],
+        repository_structure: {
+          "README.md": "Descripcion del equipo y del proyecto",
+          "sensor-forest": "Retos de sensores",
+          "traffic-city": "Retos de rutas",
+          "code-vault": "Retos de codigo",
+          "ai-lab": "Retos de machine learning",
+        },
+        deliverable: "Compartir el enlace del repositorio con los organizadores.",
+        resource_link: {
+          label: "Video resource",
+          url: "https://www.youtube.com",
+        },
+        bonus: "Agregar una pequena descripcion del equipo y sus integrantes en el README.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
     ],
-    repository_structure: {
-      "README.md": "Descripcion del equipo y del proyecto",
-      "sensor-forest": "Retos de sensores",
-      "traffic-city": "Retos de rutas",
-      "code-vault": "Retos de codigo",
-      "ai-lab": "Retos de machine learning",
-    },
-    deliverable: "Compartir el enlace del repositorio con los organizadores.",
-    resource_link: {
-      label: "Video resource",
-      url: "https://www.youtube.com",
-    },
-    bonus: "Agregar una pequena descripcion del equipo y sus integrantes en el README.",
   },
   "sensor-1": {
     id: "sensor-1",
     zone: "Sensor Forest",
     title: "Sensor 1 – Identificar Variables",
-    problem: "Los sensores de la ciudad detectan muchas señales, pero el sistema no sabe cuáles son realmente importantes.",
-    data: {
-      temperatura: ["alta", "baja"],
-      movimiento: ["si", "no"],
-      luz: ["si", "no"],
-      ruido: ["alto", "bajo"],
-    },
-    challenge: "Decidan qué variables usarían para detectar actividad sospechosa en la ciudad y cuáles pueden ignorarse.",
-    deliverable:
-      "Crear un archivo en su repo llamado sensor-variables.md donde expliquen las variables elegidas, por qué son importantes y un ejemplo de uso.",
-    bonus: "Escribir una función simple en pseudocódigo que reciba estas variables.",
+    versions: [
+      {
+        name: "basica",
+        problem: "Los sensores de la ciudad detectan muchas señales, pero el sistema no sabe cuáles son realmente importantes.",
+        data: {
+          temperatura: ["alta", "baja"],
+          movimiento: ["si", "no"],
+          luz: ["si", "no"],
+          ruido: ["alto", "bajo"],
+        },
+        challenge: "Decidan qué variables usarían para detectar actividad sospechosa en la ciudad y cuáles pueden ignorarse.",
+        deliverable:
+          "Crear un archivo en su repo llamado sensor-variables.md donde expliquen las variables elegidas, por qué son importantes y un ejemplo de uso.",
+        bonus: "Escribir una función simple en pseudocódigo que reciba estas variables.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "sensor-2": {
     id: "sensor-2",
     zone: "Sensor Forest",
     title: "Sensor 2 – Crear Reglas",
-    problem: "El sistema necesita decidir cuándo una zona puede ser peligrosa.",
-    challenge: "Diseñar al menos 3 reglas usando las variables de los sensores.",
-    example: "SI movimiento = si Y luz = no → actividad sospechosa",
-    deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
-    bonus: "Representar las reglas en pseudocódigo.",
+    versions: [
+      {
+        name: "basica",
+        problem: "El sistema necesita decidir cuándo una zona puede ser peligrosa.",
+        challenge: "Diseñar al menos 3 reglas usando las variables de los sensores.",
+        example: "SI movimiento = si Y luz = no → actividad sospechosa",
+        deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
+        bonus: "Representar las reglas en pseudocódigo.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "sensor-3": {
     id: "sensor-3",
     zone: "Sensor Forest",
     title: "Sensor 3 – Probar el Sistema",
-    problem: "Ahora debemos probar si las reglas funcionan.",
-    data: [
-      { caso: "A", temperatura: "baja", movimiento: "si", luz: "no" },
-      { caso: "B", temperatura: "alta", movimiento: "no", luz: "si" },
+    versions: [
+      {
+        name: "basica",
+        problem: "Ahora debemos probar si las reglas funcionan.",
+        data: [
+          { caso: "A", temperatura: "baja", movimiento: "si", luz: "no" },
+          { caso: "B", temperatura: "alta", movimiento: "no", luz: "si" },
+        ],
+        challenge: "Usar sus reglas para decidir si cada caso es seguro o sospechoso.",
+        deliverable: "Agregar los resultados y explicación en sensor-tests.md.",
+        bonus: "Crear un pequeño script que evalúe los casos automáticamente.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
     ],
-    challenge: "Usar sus reglas para decidir si cada caso es seguro o sospechoso.",
-    deliverable: "Agregar los resultados y explicación en sensor-tests.md.",
-    bonus: "Crear un pequeño script que evalúe los casos automáticamente.",
   },
   "traffic-1": {
     id: "traffic-1",
     zone: "Traffic City",
     title: "Traffic 1 – Encontrar Patrones",
-    problem: "El tráfico de la ciudad sigue ciertos patrones durante el día.",
-    data: {
-      "8:00": "alto",
-      "9:00": "alto",
-      "10:00": "medio",
-      "11:00": "bajo",
-    },
-    challenge: "Detectar el patrón y decidir cuál es el mejor momento para moverse por la ciudad.",
-    deliverable: "Crear traffic-pattern.md explicando el patrón detectado.",
-    bonus: "Graficar los datos usando cualquier herramienta.",
+    versions: [
+      {
+        name: "basica",
+        problem: "El tráfico de la ciudad sigue ciertos patrones durante el día.",
+        data: {
+          "8:00": "alto",
+          "9:00": "alto",
+          "10:00": "medio",
+          "11:00": "bajo",
+        },
+        challenge: "Detectar el patrón y decidir cuál es el mejor momento para moverse por la ciudad.",
+        deliverable: "Crear traffic-pattern.md explicando el patrón detectado.",
+        bonus: "Graficar los datos usando cualquier herramienta.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "traffic-2": {
     id: "traffic-2",
     zone: "Traffic City",
     title: "Traffic 2 – Diseñar una Ruta",
-    problem: "El zorro debe moverse por la ciudad evitando zonas bloqueadas.",
-    map: ["A --- B --- C", "|     |     |", "D --- E --- F"],
-    blocked: ["B"],
-    challenge: "Encontrar una ruta de A a F sin pasar por B.",
-    deliverable: "Crear route-design.md explicando la ruta elegida.",
-    bonus: "Expresar la ruta como lista de pasos.",
+    versions: [
+      {
+        name: "basica",
+        problem: "El zorro debe moverse por la ciudad evitando zonas bloqueadas.",
+        map: ["A --- B --- C", "|     |     |", "D --- E --- F"],
+        blocked: ["B"],
+        challenge: "Encontrar una ruta de A a F sin pasar por B.",
+        deliverable: "Crear route-design.md explicando la ruta elegida.",
+        bonus: "Expresar la ruta como lista de pasos.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "traffic-3": {
     id: "traffic-3",
     zone: "Traffic City",
     title: "Traffic 3 – Optimizar la Ruta",
-    problem: "La ruta actual repite caminos innecesarios.",
-    example: "A → D → E → B → C → F",
-    challenge: "Encontrar una ruta más corta posible entre A y F.",
-    deliverable: "Crear route-optimization.md explicando la nueva ruta.",
-    bonus: "Comparar ambas rutas y explicar cuál es más eficiente.",
+    versions: [
+      {
+        name: "basica",
+        problem: "La ruta actual repite caminos innecesarios.",
+        example: "A → D → E → B → C → F",
+        challenge: "Encontrar una ruta más corta posible entre A y F.",
+        deliverable: "Crear route-optimization.md explicando la nueva ruta.",
+        bonus: "Comparar ambas rutas y explicar cuál es más eficiente.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "vault-1": {
     id: "vault-1",
     zone: "Code Vault",
     title: "Vault 1 – Descifrar el Mensaje",
-    problem: "Un mensaje secreto fue cifrado.",
-    message: "KHOOR",
-    hint: "Cada letra fue movida 3 posiciones en el alfabeto.",
-    challenge: "Descifrar el mensaje original.",
-    deliverable: "Crear decode-1.md explicando cómo descifraron el mensaje.",
-    bonus: "Escribir pseudocódigo para descifrar mensajes similares.",
+    versions: [
+      {
+        name: "basica",
+        problem: "Un mensaje secreto fue cifrado.",
+        message: "KHOOR",
+        hint: "Cada letra fue movida 3 posiciones en el alfabeto.",
+        challenge: "Descifrar el mensaje original.",
+        deliverable: "Crear decode-1.md explicando cómo descifraron el mensaje.",
+        bonus: "Escribir pseudocódigo para descifrar mensajes similares.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "vault-2": {
     id: "vault-2",
     zone: "Code Vault",
     title: "Vault 2 – Detectar la Regla",
-    problem: "Otro mensaje fue cifrado usando una regla desconocida.",
-    example: "HOLA → IPMB",
-    challenge: "Descubrir la regla usada para transformar el mensaje.",
-    deliverable: "Crear decode-rule.md explicando la lógica encontrada.",
-    bonus: "Probar la regla con otra palabra.",
+    versions: [
+      {
+        name: "basica",
+        problem: "Otro mensaje fue cifrado usando una regla desconocida.",
+        example: "HOLA → IPMB",
+        challenge: "Descubrir la regla usada para transformar el mensaje.",
+        deliverable: "Crear decode-rule.md explicando la lógica encontrada.",
+        bonus: "Probar la regla con otra palabra.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "vault-3": {
     id: "vault-3",
     zone: "Code Vault",
     title: "Vault 3 – Crear el Algoritmo",
-    problem: "Ahora que conocen la regla, el sistema necesita un algoritmo.",
-    challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla.",
-    deliverable: "Crear decoder-algorithm.md con los pasos o pseudocódigo.",
-    bonus: "Implementarlo en Python o JavaScript.",
+    versions: [
+      {
+        name: "basica",
+        problem: "Ahora que conocen la regla, el sistema necesita un algoritmo.",
+        challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla.",
+        deliverable: "Crear decoder-algorithm.md con los pasos o pseudocódigo.",
+        bonus: "Implementarlo en Python o JavaScript.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "ai-1": {
     id: "ai-1",
     zone: "AI Lab",
     title: "AI 1 – Aprender de Ejemplos",
-    problem: "El sistema necesita aprender a clasificar emociones.",
-    dataset: [
-      { emoji: "🙂", sentiment: "positivo" },
-      { emoji: "😭", sentiment: "negativo" },
-      { emoji: "😡", sentiment: "negativo" },
-      { emoji: "😎", sentiment: "positivo" },
+    versions: [
+      {
+        name: "basica",
+        problem: "El sistema necesita aprender a clasificar emociones.",
+        dataset: [
+          { emoji: "🙂", sentiment: "positivo" },
+          { emoji: "😭", sentiment: "negativo" },
+          { emoji: "😡", sentiment: "negativo" },
+          { emoji: "😎", sentiment: "positivo" },
+        ],
+        challenge: "Encontrar el patrón que separa emociones positivas de negativas.",
+        deliverable: "Crear ai-pattern.md explicando el patrón encontrado.",
+        bonus: "Agregar más ejemplos al dataset.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
     ],
-    challenge: "Encontrar el patrón que separa emociones positivas de negativas.",
-    deliverable: "Crear ai-pattern.md explicando el patrón encontrado.",
-    bonus: "Agregar más ejemplos al dataset.",
   },
   "ai-2": {
     id: "ai-2",
     zone: "AI Lab",
     title: "AI 2 – Predecir Nuevos Casos",
-    problem: "Ahora el sistema debe clasificar nuevos emojis.",
-    test_cases: ["😃", "😤", "😐"],
-    challenge: "Predecir si cada emoji es positivo o negativo usando su modelo.",
-    deliverable: "Crear ai-predictions.md con sus predicciones y explicación.",
-    bonus: "Crear una regla automática para clasificar.",
+    versions: [
+      {
+        name: "basica",
+        problem: "Ahora el sistema debe clasificar nuevos emojis.",
+        test_cases: ["😃", "😤", "😐"],
+        challenge: "Predecir si cada emoji es positivo o negativo usando su modelo.",
+        deliverable: "Crear ai-predictions.md con sus predicciones y explicación.",
+        bonus: "Crear una regla automática para clasificar.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   "ai-core": {
     id: "ai-core",
     zone: "AI Core",
     title: "AI Core – Misión Final",
-    problem: "El sistema de la ciudad debe integrarlo todo.",
-    challenge:
-      "Diseñar un sistema que combine sensores, rutas, descifrado y clasificación para ayudar al zorro a mantener segura la ciudad.",
-    deliverable: "Crear final-system.md explicando cómo conectaron todas las partes.",
-    bonus: "Proponer mejoras al sistema.",
+    versions: [
+      {
+        name: "basica",
+        problem: "El sistema de la ciudad debe integrarlo todo.",
+        challenge:
+          "Diseñar un sistema que combine sensores, rutas, descifrado y clasificación para ayudar al zorro a mantener segura la ciudad.",
+        deliverable: "Crear final-system.md explicando cómo conectaron todas las partes.",
+        bonus: "Proponer mejoras al sistema.",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
+    ],
   },
   finish: {
     id: "finish",
     zone: "Finish",
     title: "🏁 Mission Complete - Save the System",
-    problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar como lograron restaurar el sistema.",
-    challenge: "Preparar una breve explicacion de como su equipo resolvio los retos y como conectaron todas las partes del sistema.",
-    questions: [
-      "Como detecta su sistema actividad usando sensores?",
-      "Como decide el zorro que ruta tomar?",
-      "Como descifran mensajes en el Code Vault?",
-      "Como clasifica emociones su modelo de AI?",
+    versions: [
+      {
+        name: "basica",
+        problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar como lograron restaurar el sistema.",
+        challenge: "Preparar una breve explicacion de como su equipo resolvio los retos y como conectaron todas las partes del sistema.",
+        questions: [
+          "Como detecta su sistema actividad usando sensores?",
+          "Como decide el zorro que ruta tomar?",
+          "Como descifran mensajes en el Code Vault?",
+          "Como clasifica emociones su modelo de AI?",
+        ],
+        deliverable: "Crear un archivo final-system.md en su repositorio explicando su solucion completa.",
+        presentation: "Cada equipo tendra 1-2 minutos para explicar su sistema al resto del grupo.",
+        bonus: "Que mejorarian si tuvieran mas tiempo?",
+      },
+      {
+        name: "hardcore",
+        problem: "",
+        challenge: "",
+        deliverable: "",
+      },
     ],
-    deliverable: "Crear un archivo final-system.md en su repositorio explicando su solucion completa.",
-    presentation: "Cada equipo tendra 1-2 minutos para explicar su sistema al resto del grupo.",
-    bonus: "Que mejorarian si tuvieran mas tiempo?",
   },
 }
 
@@ -344,6 +504,7 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
 export function WorldMap() {
   const [draggingTeam, setDraggingTeam] = useState<string | null>(null)
   const [activeNode, setActiveNode] = useState<MissionNodeData | null>(null)
+  const [activeVersion, setActiveVersion] = useState<"basica" | "hardcore">("basica")
   
   const { data: nodes, mutate: mutateNodes } = useSWR<MissionNodeData[]>("/api/nodes", fetcher, {
     revalidateOnFocus: false,
@@ -362,6 +523,7 @@ export function WorldMap() {
   const mapRef = useRef<HTMLDivElement>(null)
   const activeMission = activeNode ? MISSION_CARDS[NODE_TO_MISSION_ID[activeNode.id]] : null
   const missionTheme = activeMission ? MISSION_THEME_BY_ZONE[activeMission.zone] ?? DEFAULT_MISSION_THEME : DEFAULT_MISSION_THEME
+  const currentMissionVersion = activeMission?.versions.find((v) => v.name === activeVersion)
 
   const handleTeamDrop = useCallback(
     async (teamId: string, nodeId: string) => {
@@ -610,7 +772,10 @@ export function WorldMap() {
         <MissionNode
           key={node.id}
           node={node}
-          onClick={() => setActiveNode(node)}
+          onClick={() => {
+            setActiveNode(node)
+            setActiveVersion("basica")
+          }}
           onDrop={(teamId) => handleTeamDrop(teamId, node.id)}
           isDropTarget={draggingTeam !== null}
           teamsAtNode={(teamsByNodeId[node.id] ?? []).slice().sort((a, b) => a.id.localeCompare(b.id))}
@@ -704,57 +869,64 @@ export function WorldMap() {
             </DialogDescription>
           </DialogHeader>
 
-          {activeNode && activeMission && (
+          {activeNode && activeMission && currentMissionVersion && (
             <div className="space-y-4">
+              <Tabs defaultValue="basica" value={activeVersion} onValueChange={(value) => setActiveVersion(value as "basica" | "hardcore")}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="basica">Versión Básica</TabsTrigger>
+                  <TabsTrigger value="hardcore">Nivel Hardcore</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
               <Card className={missionTheme.cardClass}>
                 <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Problema</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm py-6">{activeMission.problem}</CardContent>
+                <CardContent className="text-sm py-6">{currentMissionVersion.problem}</CardContent>
               </Card>
 
-              {(Boolean(activeMission.data) || Boolean(activeMission.dataset) || Boolean(activeMission.map) || Boolean(activeMission.test_cases)) && (
+              {(Boolean(currentMissionVersion.data) || Boolean(currentMissionVersion.dataset) || Boolean(currentMissionVersion.map) || Boolean(currentMissionVersion.test_cases)) && (
                 <Card className={missionTheme.cardClass}>
                   <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Datos</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm py-6">
-                    {Boolean(activeMission.data) && (
-                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(activeMission.data, null, 2)}</pre>
+                    {Boolean(currentMissionVersion.data) && (
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(currentMissionVersion.data, null, 2)}</pre>
                     )}
-                    {Boolean(activeMission.dataset) && (
-                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(activeMission.dataset, null, 2)}</pre>
+                    {Boolean(currentMissionVersion.dataset) && (
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(currentMissionVersion.dataset, null, 2)}</pre>
                     )}
-                    {activeMission.map && (
-                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{activeMission.map.join("\n")}</pre>
+                    {currentMissionVersion.map && (
+                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{currentMissionVersion.map.join("\n")}</pre>
                     )}
-                    {activeMission.test_cases && <p>Casos de prueba: {activeMission.test_cases.join(", ")}</p>}
-                    {activeMission.blocked && <p>Zonas bloqueadas: {activeMission.blocked.join(", ")}</p>}
-                    {activeMission.message && <p>Mensaje: {activeMission.message}</p>}
-                    {activeMission.hint && <p>Pista: {activeMission.hint}</p>}
-                    {activeMission.example && <p>Ejemplo: {activeMission.example}</p>}
+                    {currentMissionVersion.test_cases && <p>Casos de prueba: {currentMissionVersion.test_cases.join(", ")}</p>}
+                    {currentMissionVersion.blocked && <p>Zonas bloqueadas: {currentMissionVersion.blocked.join(", ")}</p>}
+                    {currentMissionVersion.message && <p>Mensaje: {currentMissionVersion.message}</p>}
+                    {currentMissionVersion.hint && <p>Pista: {currentMissionVersion.hint}</p>}
+                    {currentMissionVersion.example && <p>Ejemplo: {currentMissionVersion.example}</p>}
                   </CardContent>
                 </Card>
               )}
 
-              {(Boolean(activeMission.steps) || Boolean(activeMission.repository_structure)) && (
+              {(Boolean(currentMissionVersion.steps) || Boolean(currentMissionVersion.repository_structure)) && (
                 <Card className={missionTheme.cardClass}>
                   <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Instrucciones</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm py-6">
-                    {activeMission.steps && (
+                    {currentMissionVersion.steps && (
                       <ol className="list-decimal pl-5 space-y-1">
-                        {activeMission.steps.map((step) => (
+                        {currentMissionVersion.steps.map((step) => (
                           <li key={step}>{step}</li>
                         ))}
                       </ol>
                     )}
-                    {activeMission.repository_structure && (
+                    {currentMissionVersion.repository_structure && (
                       <div>
                         <p className="font-semibold mb-2">Estructura sugerida del repositorio</p>
                         <div className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>
-                          {Object.entries(activeMission.repository_structure).map(([name, description]) => (
+                          {Object.entries(currentMissionVersion.repository_structure).map(([name, description]) => (
                             <p key={name}>
                               <span className="font-semibold">{name}</span>: {description}
                             </p>
@@ -766,14 +938,14 @@ export function WorldMap() {
                 </Card>
               )}
 
-              {Boolean(activeMission.questions) && (
+              {Boolean(currentMissionVersion.questions) && (
                 <Card className={missionTheme.cardClass}>
                   <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Preguntas guia</CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm py-6">
                     <ul className="list-disc pl-5 space-y-1">
-                      {activeMission.questions?.map((question) => (
+                      {currentMissionVersion.questions?.map((question) => (
                         <li key={question}>{question}</li>
                       ))}
                     </ul>
@@ -785,7 +957,7 @@ export function WorldMap() {
                 <CardHeader className={missionTheme.cardHeaderClass}>
                   <CardTitle>Reto</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm py-6">{activeMission.challenge}</CardContent>
+                <CardContent className="text-sm py-6">{currentMissionVersion.challenge}</CardContent>
               </Card>
 
               <Card className={missionTheme.cardClass}>
@@ -793,34 +965,34 @@ export function WorldMap() {
                   <CardTitle>Entregable</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm py-6 space-y-2">
-                  <p>{activeMission.deliverable}</p>
-                  {activeMission.presentation && (
+                  <p>{currentMissionVersion.deliverable}</p>
+                  {currentMissionVersion.presentation && (
                     <p>
-                      <span className="font-semibold">Presentacion:</span> {activeMission.presentation}
+                      <span className="font-semibold">Presentacion:</span> {currentMissionVersion.presentation}
                     </p>
                   )}
-                  {activeMission.resource_link && (
+                  {currentMissionVersion.resource_link && (
                     <p>
                       Recurso: {" "}
                       <a
-                        href={activeMission.resource_link.url}
+                        href={currentMissionVersion.resource_link.url}
                         target="_blank"
                         rel="noreferrer"
                         className="underline font-semibold"
                       >
-                        {activeMission.resource_link.label}
+                        {currentMissionVersion.resource_link.label}
                       </a>
                     </p>
                   )}
                 </CardContent>
               </Card>
 
-              {activeMission.bonus && (
+              {currentMissionVersion.bonus && (
                 <Card className={missionTheme.cardClass}>
                   <CardHeader className={missionTheme.cardHeaderClass}>
                     <CardTitle>Bonus</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-sm py-6">{activeMission.bonus}</CardContent>
+                  <CardContent className="text-sm py-6">{currentMissionVersion.bonus}</CardContent>
                 </Card>
               )}
             </div>
