@@ -75,6 +75,9 @@ type MissionTheme = {
   cardClass: string
   cardHeaderClass: string
   dataBoxClass: string
+  tabsListClass: string
+  tabsTriggerActiveClass: string
+  tabsTriggerInactiveClass: string
 }
 
 const MISSION_CARDS: Record<string, MissionCard> = {
@@ -451,6 +454,9 @@ const DEFAULT_MISSION_THEME: MissionTheme = {
   cardClass: "border-slate-300 bg-white text-slate-900 gap-0 py-0 overflow-hidden",
   cardHeaderClass: "bg-slate-200 rounded-t-xl",
   dataBoxClass: "bg-white border border-slate-200 text-slate-800",
+  tabsListClass: "bg-slate-100",
+  tabsTriggerActiveClass: "!bg-slate-200 !text-slate-900",
+  tabsTriggerInactiveClass: "bg-slate-50 text-black",
 }
 
 const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
@@ -462,6 +468,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-green-300 bg-green-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-green-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-green-200 text-slate-800",
+    tabsListClass: "bg-green-100",
+    tabsTriggerActiveClass: "!bg-green-200 !text-green-900",
+    tabsTriggerInactiveClass: "bg-green-50 text-black",
   },
   "Traffic City": {
     dialogClass: "border-blue-500 bg-blue-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
@@ -471,6 +480,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-blue-300 bg-blue-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-blue-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-blue-200 text-slate-800",
+    tabsListClass: "bg-blue-100",
+    tabsTriggerActiveClass: "!bg-blue-200 !text-blue-900",
+    tabsTriggerInactiveClass: "bg-blue-50 text-black",
   },
   "Code Vault": {
     dialogClass: "border-purple-500 bg-purple-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
@@ -480,6 +492,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-purple-300 bg-purple-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-purple-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-purple-200 text-slate-800",
+    tabsListClass: "bg-purple-100",
+    tabsTriggerActiveClass: "!bg-purple-200 !text-purple-900",
+    tabsTriggerInactiveClass: "bg-purple-50 text-black",
   },
   "AI Lab": {
     dialogClass: "border-cyan-500 bg-cyan-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
@@ -489,6 +504,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-cyan-300 bg-cyan-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-cyan-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-cyan-200 text-slate-800",
+    tabsListClass: "bg-cyan-100",
+    tabsTriggerActiveClass: "!bg-cyan-200 !text-cyan-900",
+    tabsTriggerInactiveClass: "bg-cyan-50 text-black",
   },
   "AI Core": {
     dialogClass: "border-cyan-500 bg-cyan-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
@@ -498,6 +516,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-cyan-300 bg-cyan-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-cyan-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-cyan-200 text-slate-800",
+    tabsListClass: "bg-cyan-100",
+    tabsTriggerActiveClass: "!bg-cyan-200 !text-cyan-900",
+    tabsTriggerInactiveClass: "bg-cyan-50 text-black",
   },
   Finish: {
     dialogClass: "border-amber-500 bg-amber-100/95 text-slate-900 shadow-2xl backdrop-blur-md",
@@ -507,6 +528,9 @@ const MISSION_THEME_BY_ZONE: Record<string, MissionTheme> = {
     cardClass: "border-amber-300 bg-amber-50/95 text-slate-900 gap-0 py-0 overflow-hidden",
     cardHeaderClass: "bg-amber-200 rounded-t-xl",
     dataBoxClass: "bg-white border border-amber-200 text-slate-800",
+    tabsListClass: "bg-amber-100",
+    tabsTriggerActiveClass: "!bg-amber-200 !text-amber-900",
+    tabsTriggerInactiveClass: "bg-amber-50 text-black",
   },
 }
 
@@ -881,9 +905,9 @@ export function WorldMap() {
           {activeNode && activeMission && currentMissionVersion && (
             <div className="space-y-4">
               <Tabs defaultValue="basica" value={activeVersion} onValueChange={(value) => setActiveVersion(value as "basica" | "hardcore")}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="basica">Versión Básica</TabsTrigger>
-                  <TabsTrigger value="hardcore">Nivel Hardcore</TabsTrigger>
+                <TabsList className={`grid w-full grid-cols-2 ${missionTheme.tabsListClass}`}>
+                  <TabsTrigger value="basica" className={activeVersion === "basica" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Versión Básica</TabsTrigger>
+                  <TabsTrigger value="hardcore" className={activeVersion === "hardcore" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Nivel Hardcore</TabsTrigger>
                 </TabsList>
               </Tabs>
 
