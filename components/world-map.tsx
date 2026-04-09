@@ -159,6 +159,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         name: "basica",
         problem: "El sistema necesita decidir cuándo una zona puede ser peligrosa.",
         challenge: "Diseñar al menos 3 reglas usando las variables de los sensores.",
+        data: "Aquí se muestran los datos del problema.",
         example: "SI movimiento = si Y luz = no → actividad sospechosa",
         deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
         bonus: "Representar las reglas en pseudocódigo.",
@@ -167,6 +168,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         name: "hardcore",
         problem: "El sistema necesita evaluar situaciones potencialmente peligrosas considerando múltiples sensores al mismo tiempo.",
         challenge: "Diseñar al menos 3 reglas que combinen usando las variables de los sensores y asigna prioridad a cada regla. 1 es la prioridad más baja, 5 la prioridad más importante.",
+        data: "Aquí se muestran los datos del problema.",
         example:  
         "SI movimiento = si y luz = no → Si prioridad > 3 → Enviar alerta. ",
         deliverable: "Crear 'sensor-rules.md' en su repo con las reglas y al menos 2 ejemplos por regla.",
@@ -277,12 +279,14 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         problem: "La ruta actual repite caminos innecesarios.",
         example: "A → D → E → B → C → F",
         challenge: "Encontrar una ruta más corta posible entre A y F.",
+        data: "Aquí se muestran los datos del problema",
         deliverable: "Crear route-optimization.md explicando la nueva ruta.",
         bonus: "Comparar ambas rutas y explicar cuál es más eficiente.",
       },
       {
         name: "hardcore",
         problem: "",
+        data: "Aquí se muestran los datos del problema",
         challenge: "",
         deliverable: "",
       },
@@ -296,18 +300,24 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       {
         name: "basica",
         problem: "Un mensaje secreto fue cifrado.",
-        message: "KHOOR",
-        hint: "Cada letra fue movida 3 posiciones en el alfabeto.",
+        message: "IPMB NVOEP",
+        data: "Aquí se muestran los datos del problema",
+        hint: "¿César?",
         challenge: "Descifrar el mensaje original.",
         deliverable: "Crear decode-1.md explicando cómo descifraron el mensaje.",
         bonus: "Escribir pseudocódigo para descifrar mensajes similares.",
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "Un mensaje secreto fue cifrado.",
+        message: "JPAS ZIMFP",
+        data: "Aquí se muestran los datos del problema",
+        hint: "Mira tu teclado.",
+        challenge: "Descifrar el mensaje original.",
+        deliverable: "Crear decode-1.md explicando cómo descifraron el mensaje.",
+        bonus: "Escribir pseudocódigo para descifrar mensajes similares.",
       },
+
     ],
   },
   "vault-2": {
@@ -318,15 +328,17 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       {
         name: "basica",
         problem: "Otro mensaje fue cifrado usando una regla desconocida.",
-        example: "HOLA → IPMB",
+        message: "HOLA → IPMB",
+        data: "Aquí se muestran los datos del problema",
         challenge: "Descubrir la regla usada para transformar el mensaje.",
         deliverable: "Crear decode-rule.md explicando la lógica encontrada.",
         bonus: "Probar la regla con otra palabra.",
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
+        data: "Aquí se muestran los datos del problema",
+        problem: "Otro mensaje fue cifrado usando una regla desconocida.",
+        challenge: "Muestra cuál es el mensaje descifrado.",
         deliverable: "",
       },
     ],
@@ -340,12 +352,14 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         name: "basica",
         problem: "Ahora que conocen la regla, el sistema necesita un algoritmo.",
         challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla.",
+        data: "Aquí se muestran los datos del problema",
         deliverable: "Crear decoder-algorithm.md con los pasos o pseudocódigo.",
         bonus: "Implementarlo en Python o JavaScript.",
       },
       {
         name: "hardcore",
         problem: "",
+        data: [],
         challenge: "",
         deliverable: "",
       },
@@ -957,6 +971,7 @@ export function WorldMap() {
                     {currentMissionVersion.message && <p>Mensaje: {currentMissionVersion.message}</p>}
                     {currentMissionVersion.hint && <p>Pista: {currentMissionVersion.hint}</p>}
                     {currentMissionVersion.example && <p>Ejemplo: {currentMissionVersion.example}</p>}
+                    {console.log("hi")}
                   </CardContent>
                 </Card>
               )}
