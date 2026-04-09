@@ -163,12 +163,15 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
         bonus: "Representar las reglas en pseudocódigo.",
       },
-      {
+        {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
-      },
+        problem: "El sistema necesita evaluar situaciones potencialmente peligrosas considerando múltiples sensores al mismo tiempo.",
+        challenge: "Diseñar al menos 3 reglas que combinen usando las variables de los sensores y asigna prioridad a cada regla. 1 es la prioridad más baja, 5 la prioridad más importante.",
+        example:  
+        "SI movimiento = si y luz = no → Si prioridad > 3 → Enviar alerta.",
+        deliverable: "Crear 'sensor-rules.md' en su repo con las reglas y al menos 2 ejemplos por regla.",
+        bonus: "¿Cómo debería hacer el sistema para detectar la prioridad de cada regla?",
+    },  
     ],
   },
   "sensor-3": {
