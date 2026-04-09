@@ -140,9 +140,13 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "Se crearán nuevos sensores en la ciudad para detectar señales adicionales.",
+        challenge: "Decidan qué variables detectarán los sensores y qué niveles detectan para esas variables. Se deja un ejemplo.",
+        data: {
+          temperatura: ["alta", "baja"],
+        },
+        deliverable: "Crear un archivo en su repo llamado sensor-variables.md donde expliquen las variables elegidas, por qué son importantes y un ejemplo de uso.",
+        bonus: "Escribir las variables en el mismo formato que el ejemplo.",
       },
     ],
   },
