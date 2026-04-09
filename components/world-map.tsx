@@ -113,9 +113,9 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "¡Bienvenidos a la aventura!",
+        challenge: "Que comience la misión. ¡Buena suerte, equipo!",
+        deliverable: "La aventura ya ha comenzado. ¡Adelante!",
       },
     ],
   },
