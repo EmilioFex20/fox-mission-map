@@ -354,7 +354,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       {
         name: "basica",
         problem: "Ahora que conocen la regla, el sistema necesita un algoritmo.",
-        challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla.",
+        challenge: "Escribir los pasos para descifrar cualquier mensaje con esta regla. Nota: La regla en cuestión es la que se muestra en el problema Vault 2, versión básica.",
         data: "Aquí se muestran los datos del problema",
         deliverable: "Crear decoder-algorithm.md con los pasos o pseudocódigo.",
         bonus: "Implementarlo en Python o JavaScript.",
