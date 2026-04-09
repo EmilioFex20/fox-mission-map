@@ -107,7 +107,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         deliverable: "Compartir el enlace del repositorio con los organizadores.",
         resource_link: {
           label: "Video resource",
-          url: "https://www.youtube.com",
+          url: "https://youtu.be/KbqJi4HQ9po",
         },
         bonus: "Agregar una pequena descripcion del equipo y sus integrantes en el README.",
       },
