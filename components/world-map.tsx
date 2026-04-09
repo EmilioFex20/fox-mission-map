@@ -286,10 +286,10 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        data: "Aquí se muestran los datos del problema",
-        challenge: "",
-        deliverable: "",
+        problem: "Algunos caminos toman más tiempo que otros.",
+        data: "/mapa-traffic.png",
+        challenge: "Encuentra el camino que tome menos horas de A a F. Ejemplo: A -> B -> C",
+        deliverable: "Crear route-optimization.md explicando la ruta más rápida.",
       },
     ],
   },
@@ -430,9 +430,9 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "¡Lo lograste! Has completado todos los retos.",
+        challenge: "Felicidades, tu equipo ha guiado al zorro a través de toda la aventura y ha restaurado el sistema de la ciudad.",
+        deliverable: "¡Bien hecho! Tu misión ha sido un éxito.",
       },
     ],
   },
@@ -443,22 +443,22 @@ const MISSION_CARDS: Record<string, MissionCard> = {
     versions: [
       {
         name: "basica",
-        problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar como lograron restaurar el sistema.",
-        challenge: "Preparar una breve explicacion de como su equipo resolvio los retos y como conectaron todas las partes del sistema.",
+        problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar cómo lograron restaurar el sistema.",
+        challenge: "Preparar una breve explicación de cómo su equipo resolvió los retos y cómo conectaron todas las partes del sistema.",
         questions: [
-          "Como detecta su sistema actividad usando sensores?",
-          "Como decide el zorro que ruta tomar?",
-          "Como descifran mensajes en el Code Vault?",
-          "Como clasifica emociones su modelo de AI?",
+          "¿Cómo detecta su sistema actividad usando sensores?",
+          "¿Cómo decide el zorro qué ruta tomar?",
+          "¿Cómo descifran mensajes en el Code Vault?",
+          "¿Cómo clasifica emociones su modelo de AI?",
         ],
-        deliverable: "Crear un archivo final-system.md en su repositorio explicando su solucion completa.",
-        bonus: "Que mejorarian si tuvieran mas tiempo?",
+        deliverable: "Crear un archivo final-system.md en su repositorio explicando su solución completa.",
+        bonus: "¿Qué mejorarían si tuvieran más tiempo?",
       },
       {
         name: "hardcore",
-        problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar como lograron restaurar el sistema.",
-        challenge: "Preparar una breve explicacion de como su equipo resolvio los retos y como conectaron todas las partes del sistema.",
-        deliverable: "Un video o presentacion explicando su solucion completa.",
+        problem: "El zorro ha recorrido toda la ciudad. Ahora es momento de explicar cómo lograron restaurar el sistema.",
+        challenge: "Preparar una breve explicación de cómo su equipo resolvió los retos y cómo conectaron todas las partes del sistema.",
+        deliverable: "Un video o presentación explicando su solución completa.",
       },
     ],
   },
@@ -591,7 +591,8 @@ export function WorldMap() {
   const mapRef = useRef<HTMLDivElement>(null)
   const activeMission = activeNode ? MISSION_CARDS[NODE_TO_MISSION_ID[activeNode.id]] : null
   const missionTheme = activeMission ? MISSION_THEME_BY_ZONE[activeMission.zone] ?? DEFAULT_MISSION_THEME : DEFAULT_MISSION_THEME
-  const currentMissionVersion = activeMission?.versions.find((v) => v.name === activeVersion)
+  const effectiveVersion = activeNode && ["ai-1", "ai-2", "ai-3", "ai-core", "vault-3"].includes(activeNode.id) ? "basica" : activeVersion
+  const currentMissionVersion = activeMission?.versions.find((v) => v.name === effectiveVersion)
 
   const handleTeamDrop = useCallback(
     async (teamId: string, nodeId: string) => {
@@ -939,11 +940,11 @@ export function WorldMap() {
 
           {activeNode && activeMission && currentMissionVersion && (
             <div className="space-y-4">
-              <Tabs defaultValue="basica" value={activeVersion} onValueChange={(value) => setActiveVersion(value as "basica" | "hardcore")}>
-                <TabsList className={`grid w-full ${!["ai-1", "ai-2", "ai-3", "ai-core"].includes(activeNode.id) ? "grid-cols-2" : "grid-cols-1"} ${missionTheme.tabsListClass}`}>
-                  <TabsTrigger value="basica" className={activeVersion === "basica" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Reto</TabsTrigger>
-                  {!["ai-1", "ai-2", "ai-3", "ai-core"].includes(activeNode.id) && (
-                    <TabsTrigger value="hardcore" className={activeVersion === "hardcore" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Me siento con suerte</TabsTrigger>
+              <Tabs defaultValue="basica" value={effectiveVersion} onValueChange={(value) => !["ai-1", "ai-2", "ai-3", "ai-core", "vault-3"].includes(activeNode.id) && setActiveVersion(value as "basica" | "hardcore")}>
+                <TabsList className={`grid w-full ${!["ai-1", "ai-2", "ai-3", "ai-core", "vault-3"].includes(activeNode.id) ? "grid-cols-2" : "grid-cols-1"} ${missionTheme.tabsListClass}`}>
+                  <TabsTrigger value="basica" className={effectiveVersion === "basica" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Reto</TabsTrigger>
+                  {!["ai-1", "ai-2", "ai-3", "ai-core", "vault-3"].includes(activeNode.id) && (
+                    <TabsTrigger value="hardcore" className={effectiveVersion === "hardcore" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Me siento con suerte</TabsTrigger>
                   )}
                 </TabsList>
               </Tabs>
@@ -962,7 +963,11 @@ export function WorldMap() {
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm py-6">
                     {Boolean(currentMissionVersion.data) && (
-                      <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(currentMissionVersion.data, null, 2)}</pre>
+                      typeof currentMissionVersion.data === "string" && /\.(png|jpg|jpeg|gif|webp)$/i.test(currentMissionVersion.data) ? (
+                        <img src={currentMissionVersion.data} alt="Mission data" className="rounded-md w-full max-w-2xl" />
+                      ) : (
+                        <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(currentMissionVersion.data, null, 2)}</pre>
+                      )
                     )}
                     {Boolean(currentMissionVersion.dataset) && (
                       <pre className={`rounded-md p-3 overflow-x-auto text-xs ${missionTheme.dataBoxClass}`}>{JSON.stringify(currentMissionVersion.dataset, null, 2)}</pre>
