@@ -140,9 +140,13 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "Se crearán nuevos sensores en la ciudad para detectar señales adicionales.",
+        challenge: "Decidan qué variables detectarán los sensores y qué niveles detectan para esas variables. Se deja un ejemplo.",
+        data: {
+          temperatura: ["alta", "baja"],
+        },
+        deliverable: "Crear un archivo en su repo llamado sensor-variables.md donde expliquen las variables elegidas, por qué son importantes y un ejemplo de uso.",
+        bonus: "Escribir las variables en el mismo formato que el ejemplo.",
       },
     ],
   },
@@ -159,12 +163,15 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         deliverable: "Crear sensor-rules.md en su repo con las reglas y ejemplos.",
         bonus: "Representar las reglas en pseudocódigo.",
       },
-      {
+        {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
-      },
+        problem: "El sistema necesita evaluar situaciones potencialmente peligrosas considerando múltiples sensores al mismo tiempo.",
+        challenge: "Diseñar al menos 3 reglas que combinen usando las variables de los sensores y asigna prioridad a cada regla. 1 es la prioridad más baja, 5 la prioridad más importante.",
+        example:  
+        "SI movimiento = si y luz = no → Si prioridad > 3 → Enviar alerta. ",
+        deliverable: "Crear 'sensor-rules.md' en su repo con las reglas y al menos 2 ejemplos por regla.",
+        bonus: "¿Cómo debería hacer el sistema para detectar la prioridad de cada regla?",
+    },  
     ],
   },
   "sensor-3": {
@@ -185,9 +192,14 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "Antes de implementar el sistema en la ciudad, debes probar que funciona.",
+        data: [
+          { caso: "A", temperatura: "baja", movimiento: "si", luz: "no", resultado: "No alerta" },
+          { caso: "B", temperatura: "alta", movimiento: "si", luz: "no", resultado: "Alerta" },
+        ],
+        challenge: "Crea pruebas para evaluar el sistema. Asegúrate de añadir pruebas donde el sistema debería mostrar una alerta y donde no debería. Se muestra un ejemplo.",
+        deliverable: "Agregar las pruebas propuestas en sensor-tests.md.",
+        bonus: "¿El sistema que crearon en el reto anterior funciona para las pruebas que propusieron? Si no, ¿Es posible arreglar el error sin hacer el sistema desde cero?",
       },
     ],
   },
@@ -209,12 +221,19 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         deliverable: "Crear traffic-pattern.md explicando el patrón detectado.",
         bonus: "Graficar los datos usando cualquier herramienta.",
       },
-      {
-        name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
-      },
+        {
+          name: "hardcore",
+          problem: "La movilidad en la ciudad depende de múltiples factores como tráfico, temperatura y condiciones ambientales durante el día.",
+          data: {
+            "8:00": { "trafico": "alto", "temperatura": "18°C", "clima": "nublado" },
+            "9:00": { "trafico": "alto", "temperatura": "20°C", "clima": "soleado" },
+            "10:00": { "trafico": "medio", "temperatura": "23°C", "clima": "soleado" },
+            "11:00": { "trafico": "bajo", "temperatura": "26°C", "clima": "soleado" }
+          },
+          challenge: "Detectar patrones considerando y decidir cuál es el mejor momento para moverse por la ciudad.",
+          deliverable: "Crear 'mobility-pattern.md' explicando el patrón detectado y justificando la mejor hora.",
+          bonus: "Graficar al menos dos variables (por ejemplo, tráfico y temperatura) y analizar su relación."
+        }
     ],
   },
   "traffic-2": {
