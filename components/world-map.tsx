@@ -925,7 +925,7 @@ export function WorldMap() {
             <div className="space-y-4">
               <Tabs defaultValue="basica" value={activeVersion} onValueChange={(value) => setActiveVersion(value as "basica" | "hardcore")}>
                 <TabsList className={`grid w-full grid-cols-2 ${missionTheme.tabsListClass}`}>
-                  <TabsTrigger value="basica" className={activeVersion === "basica" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Versión Básica</TabsTrigger>
+                  <TabsTrigger value="basica" className={activeVersion === "basica" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Reto</TabsTrigger>
                   <TabsTrigger value="hardcore" className={activeVersion === "hardcore" ? missionTheme.tabsTriggerActiveClass : missionTheme.tabsTriggerInactiveClass}>Me siento con suerte</TabsTrigger>
                 </TabsList>
               </Tabs>
