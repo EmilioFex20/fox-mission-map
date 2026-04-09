@@ -278,6 +278,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         name: "basica",
         problem: "La ruta actual repite caminos innecesarios.",
         example: "A → D → E → B → C → F",
+        map: ["A --- B --- C", "|     |     |", "D --- E --- F"],
         challenge: "Encontrar una ruta más corta posible entre A y F.",
         data: "Aquí se muestran los datos del problema",
         deliverable: "Crear route-optimization.md explicando la nueva ruta.",
