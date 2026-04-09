@@ -168,7 +168,7 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         problem: "El sistema necesita evaluar situaciones potencialmente peligrosas considerando múltiples sensores al mismo tiempo.",
         challenge: "Diseñar al menos 3 reglas que combinen usando las variables de los sensores y asigna prioridad a cada regla. 1 es la prioridad más baja, 5 la prioridad más importante.",
         example:  
-        "SI movimiento = si y luz = no → Si prioridad > 3 → Enviar alerta.",
+        "SI movimiento = si y luz = no → Si prioridad > 3 → Enviar alerta. ",
         deliverable: "Crear 'sensor-rules.md' en su repo con las reglas y al menos 2 ejemplos por regla.",
         bonus: "¿Cómo debería hacer el sistema para detectar la prioridad de cada regla?",
     },  
@@ -192,9 +192,14 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       },
       {
         name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
+        problem: "Antes de implementar el sistema en la ciudad, debes probar que funciona.",
+        data: [
+          { caso: "A", temperatura: "baja", movimiento: "si", luz: "no", resultado: "No alerta" },
+          { caso: "B", temperatura: "alta", movimiento: "si", luz: "no", resultado: "Alerta" },
+        ],
+        challenge: "Crea pruebas para evaluar el sistema. Asegúrate de añadir pruebas donde el sistema debería mostrar una alerta y donde no debería. Se muestra un ejemplo.",
+        deliverable: "Agregar las pruebas propuestas en sensor-tests.md.",
+        bonus: "¿El sistema que crearon en el reto anterior funciona para las pruebas que propusieron? Si no, ¿Es posible arreglar el error sin hacer el sistema desde cero?",
       },
     ],
   },
