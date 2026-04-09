@@ -221,12 +221,19 @@ const MISSION_CARDS: Record<string, MissionCard> = {
         deliverable: "Crear traffic-pattern.md explicando el patrón detectado.",
         bonus: "Graficar los datos usando cualquier herramienta.",
       },
-      {
-        name: "hardcore",
-        problem: "",
-        challenge: "",
-        deliverable: "",
-      },
+        {
+          name: "hardcore",
+          problem: "La movilidad en la ciudad depende de múltiples factores como tráfico, temperatura y condiciones ambientales durante el día.",
+          data: {
+            "8:00": { "trafico": "alto", "temperatura": "18°C", "clima": "nublado" },
+            "9:00": { "trafico": "alto", "temperatura": "20°C", "clima": "soleado" },
+            "10:00": { "trafico": "medio", "temperatura": "23°C", "clima": "soleado" },
+            "11:00": { "trafico": "bajo", "temperatura": "26°C", "clima": "soleado" }
+          },
+          challenge: "Detectar patrones considerando y decidir cuál es el mejor momento para moverse por la ciudad.",
+          deliverable: "Crear 'mobility-pattern.md' explicando el patrón detectado y justificando la mejor hora.",
+          bonus: "Graficar al menos dos variables (por ejemplo, tráfico y temperatura) y analizar su relación."
+        }
     ],
   },
   "traffic-2": {
