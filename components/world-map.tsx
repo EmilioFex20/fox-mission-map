@@ -974,7 +974,6 @@ export function WorldMap() {
                     {currentMissionVersion.message && <p>Mensaje: {currentMissionVersion.message}</p>}
                     {currentMissionVersion.hint && <p>Pista: {currentMissionVersion.hint}</p>}
                     {currentMissionVersion.example && <p>Ejemplo: {currentMissionVersion.example}</p>}
-                    {console.log("hi")}
                   </CardContent>
                 </Card>
               )}
