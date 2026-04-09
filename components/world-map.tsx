@@ -338,9 +338,11 @@ const MISSION_CARDS: Record<string, MissionCard> = {
       {
         name: "hardcore",
         data: "Aquí se muestran los datos del problema",
-        problem: "Otro mensaje fue cifrado usando una regla desconocida.",
+        problem: "Otro mensaje fue cifrado usando cifrado base 64.",
+        hint: "Usa Google",
+        message: "RXN0YSBlcyBsYSByZXNwdWVzdGEuIFRxbQ==",
         challenge: "Muestra cuál es el mensaje descifrado.",
-        deliverable: "",
+        deliverable: "Crear decode-rule.md con el mensaje descifrado.",
       },
     ],
   },
